@@ -1,9 +1,17 @@
+import { useEffect, useState } from "react";
+import { approveUser, fetchPendingUsers } from "../lib/supabase";
+
 export default function ProfileScreen({
   user,
   onLogout,
   predictions,
   myPoints,
 }) {
+  const [adminError, setAdminError] = useState(null);
+  const [approvingUserId, setApprovingUserId] = useState(null);
+  const [isLoadingPendingUsers, setIsLoadingPendingUsers] = useState(false);
+  const [pendingUsers, setPendingUsers] = useState([]);
+
   // Derive history from live predictions map passed from App
   const history = Object.values(predictions ?? {}).filter(
     (p) => p.result === "won" || p.result === "lost" || p.result === "void",
@@ -12,6 +20,81 @@ export default function ProfileScreen({
   const correct = history.filter((p) => p.result === "won").length;
   const total = history.filter((p) => p.result !== "void").length;
   const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
+
+  useEffect(() => {
+    if (!user.isAdmin) {
+      setPendingUsers([]);
+      setAdminError(null);
+      return undefined;
+    }
+
+    let ignore = false;
+
+    const loadPendingUsers = async () => {
+      setIsLoadingPendingUsers(true);
+      setAdminError(null);
+
+      try {
+        const nextPendingUsers = await fetchPendingUsers();
+
+        if (!ignore) {
+          setPendingUsers(
+            nextPendingUsers.filter(
+              (pendingUser) => pendingUser.id !== user.id,
+            ),
+          );
+        }
+      } catch {
+        if (!ignore) {
+          setAdminError("Unable to load pending users right now.");
+        }
+      } finally {
+        if (!ignore) {
+          setIsLoadingPendingUsers(false);
+        }
+      }
+    };
+
+    void loadPendingUsers();
+
+    return () => {
+      ignore = true;
+    };
+  }, [user.id, user.isAdmin]);
+
+  const handleApprove = async (pendingUserId) => {
+    if (!pendingUserId || approvingUserId) {
+      return;
+    }
+
+    setApprovingUserId(pendingUserId);
+    setAdminError(null);
+    setPendingUsers((prevUsers) =>
+      prevUsers.filter((pendingUser) => pendingUser.id !== pendingUserId),
+    );
+
+    try {
+      const { error } = await approveUser(pendingUserId);
+
+      if (error) {
+        setAdminError("Approval failed. Please try again.");
+        const nextPendingUsers = await fetchPendingUsers();
+        setPendingUsers(
+          nextPendingUsers.filter((pendingUser) => pendingUser.id !== user.id),
+        );
+        return;
+      }
+
+      const nextPendingUsers = await fetchPendingUsers();
+      setPendingUsers(
+        nextPendingUsers.filter((pendingUser) => pendingUser.id !== user.id),
+      );
+    } catch {
+      setAdminError("Approval failed. Please try again.");
+    } finally {
+      setApprovingUserId(null);
+    }
+  };
 
   return (
     <div className="screen">
@@ -113,6 +196,84 @@ export default function ProfileScreen({
             </div>
           ))}
         </div>
+
+        {user.isAdmin && (
+          <>
+            <div className="section" style={{ marginBottom: 12 }}>
+              <div className="section-title">🛡️ Pending Approvals</div>
+            </div>
+
+            <div className="hist-list">
+              {adminError && (
+                <div
+                  style={{
+                    background: "rgba(255, 71, 87, 0.08)",
+                    border: "1px solid rgba(255, 71, 87, 0.2)",
+                    borderRadius: 14,
+                    color: "var(--sub)",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    marginBottom: 8,
+                    padding: "14px 16px",
+                  }}
+                >
+                  {adminError}
+                </div>
+              )}
+
+              {isLoadingPendingUsers && (
+                <div
+                  style={{
+                    textAlign: "center",
+                    padding: "16px 0",
+                    color: "var(--muted)",
+                    fontWeight: 700,
+                    fontSize: 13,
+                  }}
+                >
+                  Loading pending users...
+                </div>
+              )}
+
+              {!isLoadingPendingUsers && pendingUsers.length === 0 && (
+                <div
+                  style={{
+                    textAlign: "center",
+                    padding: "16px 0 24px",
+                    color: "var(--muted)",
+                    fontWeight: 700,
+                    fontSize: 13,
+                  }}
+                >
+                  No pending users right now.
+                </div>
+              )}
+
+              {pendingUsers.map((pendingUser) => (
+                <div key={pendingUser.id} className="hist-item">
+                  <span className="hist-badge">⏳</span>
+                  <div className="hist-info">
+                    <div className="hist-match">{pendingUser.name}</div>
+                    <div className="hist-pick">{pendingUser.email}</div>
+                  </div>
+                  <div className="hist-right" style={{ minWidth: 108 }}>
+                    <button
+                      className="change-btn"
+                      disabled={approvingUserId === pendingUser.id}
+                      onClick={() => {
+                        void handleApprove(pendingUser.id);
+                      }}
+                    >
+                      {approvingUserId === pendingUser.id
+                        ? "Approving..."
+                        : "Approve"}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

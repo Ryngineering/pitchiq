@@ -19,6 +19,7 @@ function App() {
   const [screen, setScreen] = useState("home");
   const [selectedId, setSelectedId] = useState(null);
   const [toast, setToast] = useState(null);
+  const [isRefreshingApproval, setIsRefreshingApproval] = useState(false);
   const toastTimeoutRef = useRef(null);
 
   const showToast = useCallback((msg, emoji = "🏏") => {
@@ -67,15 +68,18 @@ function App() {
     [showToast],
   );
 
-  const { isAuthLoading, login, logout, user } = useSupabaseAuth({
-    onError: handleAuthError,
-    onSignedIn: handleSignedIn,
-    onSignedOut: handleSignedOut,
-  });
+  const { isAuthLoading, login, logout, refreshApprovalStatus, user } =
+    useSupabaseAuth({
+      onError: handleAuthError,
+      onSignedIn: handleSignedIn,
+      onSignedOut: handleSignedOut,
+    });
+
+  const approvedUser = user?.isApproved ? user : null;
 
   const { matches, myPoints, predictions, setPredictions } = usePitchData({
     onError: handleAuthError,
-    user,
+    user: approvedUser,
   });
 
   const handleIdle = useCallback(() => {
@@ -165,6 +169,23 @@ function App() {
     void logout();
   }, [logout]);
 
+  const handleRefreshApproval = useCallback(async () => {
+    setIsRefreshingApproval(true);
+
+    try {
+      const flags = await refreshApprovalStatus();
+
+      if (flags?.isApproved) {
+        showToast("Approval confirmed. Welcome in.", "✅");
+        return;
+      }
+
+      showToast("Still waiting for approval.", "⏳");
+    } finally {
+      setIsRefreshingApproval(false);
+    }
+  }, [refreshApprovalStatus, showToast]);
+
   const selectedMatch = matches.find((m) => m.id === selectedId);
 
   if (!hasSupabaseConfig) {
@@ -219,6 +240,57 @@ function App() {
 
   if (!user) {
     return <LoginScreen onLogin={login} />;
+  }
+
+  if (!user.isApproved) {
+    return (
+      <div className="app">
+        {toast && <Toast msg={toast.msg} emoji={toast.emoji} />}
+
+        <div className="login-screen">
+          <div className="login-glow" />
+          <div className="login-glow2" />
+
+          <div className="login-logo-wrap">
+            <span className="login-ball">🏏</span>
+            <div className="login-logo">PITCHIQ</div>
+          </div>
+
+          <div className="login-tagline">Approval Required</div>
+          <div className="login-headline">
+            Hi <span>{user.name}</span>
+          </div>
+          <div className="login-desc" style={{ maxWidth: 320 }}>
+            Your account is signed in but still waiting for admin approval. Once
+            approved, tap refresh and the app will open immediately.
+          </div>
+
+          <div
+            style={{
+              width: "100%",
+              maxWidth: 300,
+              display: "grid",
+              gap: 12,
+            }}
+          >
+            <button
+              className="confirm-btn"
+              disabled={isRefreshingApproval}
+              onClick={() => {
+                void handleRefreshApproval();
+              }}
+            >
+              {isRefreshingApproval
+                ? "Checking approval..."
+                : "Refresh approval"}
+            </button>
+            <button className="profile-btn" onClick={handleLogout}>
+              Sign out
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

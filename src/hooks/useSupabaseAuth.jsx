@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   consumeAuthIntent,
+  fetchUserProfileFlags,
   getAuthenticatedUser,
   hasSupabaseConfig,
   mapAuthUser,
@@ -52,6 +53,40 @@ export default function useSupabaseAuth({
     onErrorRef.current?.(message);
   }, []);
 
+  const hydrateUserWithProfileFlags = useCallback(async (nextUser) => {
+    if (!nextUser?.id) {
+      return null;
+    }
+
+    const flags = await fetchUserProfileFlags(nextUser.id);
+
+    return {
+      ...nextUser,
+      ...flags,
+    };
+  }, []);
+
+  const refreshApprovalStatus = useCallback(async () => {
+    if (!user?.id) {
+      return null;
+    }
+
+    const flags = await fetchUserProfileFlags(user.id);
+
+    setUser((prevUser) => {
+      if (!prevUser) {
+        return prevUser;
+      }
+
+      return {
+        ...prevUser,
+        ...flags,
+      };
+    });
+
+    return flags;
+  }, [user]);
+
   useEffect(() => {
     if (!supabase) {
       return undefined;
@@ -65,9 +100,12 @@ export default function useSupabaseAuth({
           getAuthenticatedUser(),
           AUTH_BOOTSTRAP_TIMEOUT_MS,
         );
+        const hydratedUser = authenticatedUser
+          ? await hydrateUserWithProfileFlags(authenticatedUser)
+          : null;
 
         if (!ignore) {
-          setUser(authenticatedUser);
+          setUser(hydratedUser);
         }
       } catch {
         if (!ignore) {
@@ -100,29 +138,39 @@ export default function useSupabaseAuth({
         return;
       }
 
-      let nextUser = null;
+      void (async () => {
+        let nextUser = null;
 
-      try {
-        if (session?.user) {
-          nextUser = mapAuthUser(session.user);
+        try {
+          if (session?.user) {
+            const mappedUser = mapAuthUser(session.user);
+
+            nextUser = await hydrateUserWithProfileFlags(mappedUser);
+          }
+
+          if (!ignore) {
+            setUser(nextUser);
+          }
+        } catch {
+          if (!ignore) {
+            setUser(null);
+          }
+        } finally {
+          if (!ignore) {
+            setIsAuthLoading(false);
+          }
         }
 
-        setUser(nextUser);
-      } catch {
-        setUser(null);
-      } finally {
-        setIsAuthLoading(false);
-      }
+        if (event === "SIGNED_IN" && nextUser) {
+          window.setTimeout(() => {
+            void refreshUserProfile(nextUser);
+          }, 0);
 
-      if (event === "SIGNED_IN" && nextUser) {
-        window.setTimeout(() => {
-          void refreshUserProfile(nextUser);
-        }, 0);
-
-        if (consumeAuthIntent()) {
-          onSignedInRef.current?.(nextUser);
+          if (consumeAuthIntent()) {
+            onSignedInRef.current?.(nextUser);
+          }
         }
-      }
+      })();
     });
 
     return () => {
@@ -175,6 +223,7 @@ export default function useSupabaseAuth({
     isAuthLoading,
     login,
     logout,
+    refreshApprovalStatus,
     user,
   };
 }

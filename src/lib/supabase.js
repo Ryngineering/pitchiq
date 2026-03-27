@@ -307,6 +307,13 @@ function getInitials(name = "Player") {
     .join("");
 }
 
+function normalizeProfileFlags(profile) {
+  return {
+    isAdmin: Boolean(profile?.is_admin),
+    isApproved: Boolean(profile?.is_approved),
+  };
+}
+
 export function mapAuthUser(authUser) {
   if (!authUser) return null;
 
@@ -324,6 +331,8 @@ export function mapAuthUser(authUser) {
     email: authUser.email || "No email available",
     avatarUrl: metadata.avatar_url || null,
     initials: getInitials(name),
+    isAdmin: false,
+    isApproved: false,
     provider,
   };
 }
@@ -340,6 +349,8 @@ export function mapClaimsToUser(claims) {
     email,
     avatarUrl: claims.user_metadata?.avatar_url || null,
     initials: getInitials(name),
+    isAdmin: false,
+    isApproved: false,
     provider: claims.app_metadata?.provider || "sso",
   };
 }
@@ -474,6 +485,78 @@ export async function refreshUserProfile(authUser) {
   }
 
   return data ?? null;
+}
+
+export async function fetchUserProfileFlags(userId) {
+  if (!supabase || !userId) {
+    return {
+      isAdmin: false,
+      isApproved: false,
+    };
+  }
+
+  const { data, error } = await supabase
+    .from("user_profile")
+    .select("is_approved, is_admin")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("fetchUserProfileFlags error:", error);
+    return {
+      isAdmin: false,
+      isApproved: false,
+    };
+  }
+
+  return normalizeProfileFlags(data);
+}
+
+export async function fetchPendingUsers() {
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from("user_profile")
+    .select("id, display_name, email, avatar_url, created_at")
+    .eq("is_approved", false)
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    console.error("fetchPendingUsers error:", error);
+    throw error;
+  }
+
+  return (data ?? []).map((row) => ({
+    avatarUrl: row.avatar_url ?? null,
+    createdAt: row.created_at ?? null,
+    email: row.email ?? "No email available",
+    id: row.id,
+    name: row.display_name || row.email?.split("@")[0] || "Player",
+  }));
+}
+
+export async function approveUser(userId) {
+  if (!supabase || !userId) {
+    return {
+      data: null,
+      error: new Error("Supabase not configured"),
+    };
+  }
+
+  const { data, error } = await supabase
+    .from("user_profile")
+    .update({
+      is_approved: true,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", userId)
+    .select("id, is_approved")
+    .single();
+
+  return {
+    data: data ?? null,
+    error: error ?? null,
+  };
 }
 
 // ─── PREDICTIONS ──────────────────────────────────────────────────────────────
