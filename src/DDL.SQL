@@ -352,10 +352,6 @@ using (
   )
 );
 
--- 11) Leaderboard view (rank + pts + correct + total — excludes void from totals)
--- SECURITY INVOKER caused each user to see only their own prediction rows due to
--- RLS on user_predictions. Keep this as a SECURITY DEFINER-style view so
--- authenticated users can read aggregated leaderboard stats for all players.
 create or replace view public.leaderboard
 with (security_invoker = false) as
 select
@@ -383,3 +379,73 @@ group by upf.id, upf.display_name, upf.email, upf.created_at;
 
 grant select on public.leaderboard to authenticated;
 
+-- ============================================================
+-- MIGRATION: League Sync Configuration and Logging
+-- ============================================================
+
+-- 1) League sync configuration table
+create table if not exists public.league_sync_config (
+  id                   bigserial primary key,
+  league_id            bigint        not null,
+  league_name          text          not null,
+  season               integer       not null,
+  scheduled_time       time          not null default '00:00:00',
+  sync_interval_hours  integer       not null default 24,
+  enabled              boolean       not null default true,
+  last_sync_at         timestamptz,
+  next_sync_at         timestamptz,
+  created_at           timestamptz   not null default now(),
+  updated_at           timestamptz   not null default now(),
+
+  constraint uq_league_season unique (league_id, season)
+);
+
+create index if not exists idx_league_sync_config_enabled_next_sync
+  on public.league_sync_config(enabled, next_sync_at)
+  where enabled = true;
+
+-- 2) League sync logs table
+create table if not exists public.league_sync_logs (
+  id                   bigserial primary key,
+  league_id            bigint        not null,
+  league_name          text          not null,
+  season               integer       not null,
+  sync_started_at      timestamptz   not null default now(),
+  sync_ended_at        timestamptz,
+  matches_found        integer       not null default 0,
+  matches_synced       integer       not null default 0,
+  matches_failed       integer       not null default 0,
+  error_summary        jsonb,
+  created_at           timestamptz   not null default now()
+);
+
+create index if not exists idx_league_sync_logs_league_id_date
+  on public.league_sync_logs(league_id, created_at desc);
+
+-- 3) Auto-update updated_at for league_sync_config
+drop trigger if exists trg_league_sync_config_updated_at on public.league_sync_config;
+create trigger trg_league_sync_config_updated_at
+before update on public.league_sync_config
+for each row execute function public.tg_set_updated_at();
+
+-- 4) RLS for league_sync_config and league_sync_logs
+alter table public.league_sync_config enable row level security;
+alter table public.league_sync_logs enable row level security;
+
+create policy "league_sync_config_read_all"
+on public.league_sync_config for select
+to authenticated using (true);
+
+create policy "league_sync_logs_read_all"
+on public.league_sync_logs for select
+to authenticated using (true);
+
+-- 5) Seed example league configs
+insert into public.league_sync_config (league_id, league_name, season, scheduled_time, sync_interval_hours, enabled)
+values
+  (52875307, 'IPL', 2026, '06:00:00', 24, true)
+on conflict (league_id, season) do nothing;
+
+-- alter table to add start_date_time to cricket_matches for better scheduling and prediction timing logic
+alter table public.cricket_matches
+add column if not exists start_date_time timestamptz;

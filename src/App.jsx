@@ -25,6 +25,8 @@ import {
 } from "./lib/supabase";
 import "./App.css";
 
+const INACTIVITY_SIGN_OUT_MS = 15 * 60 * 1000;
+
 function App() {
   const [user, setUser] = useState(null);
   const [isAuthLoading, setIsAuthLoading] = useState(hasSupabaseConfig);
@@ -36,6 +38,16 @@ function App() {
   const [myPoints, setMyPoints] = useState(0);
   const [toast, setToast] = useState(null);
   const toastTimeoutRef = useRef(null);
+  const inactivityTimeoutRef = useRef(null);
+  const autoSignOutRef = useRef(false);
+  const signOutInProgressRef = useRef(false);
+
+  const clearInactivityTimer = useCallback(() => {
+    if (inactivityTimeoutRef.current) {
+      window.clearTimeout(inactivityTimeoutRef.current);
+      inactivityTimeoutRef.current = null;
+    }
+  }, []);
 
   const showToast = useCallback((msg, emoji = "🏏") => {
     if (toastTimeoutRef.current) {
@@ -51,8 +63,10 @@ function App() {
       if (toastTimeoutRef.current) {
         window.clearTimeout(toastTimeoutRef.current);
       }
+
+      clearInactivityTimer();
     };
-  }, []);
+  }, [clearInactivityTimer]);
 
   useEffect(() => {
     if (!supabase) {
@@ -107,12 +121,22 @@ function App() {
       }
 
       if (event === "SIGNED_OUT") {
+        const wasAutoSignOut = autoSignOutRef.current;
+        autoSignOutRef.current = false;
+        signOutInProgressRef.current = false;
+        clearInactivityTimer();
+
         console.log("User signed out from authStateChange event");
         setUser(null);
         setSelectedId(null);
         setIsAuthLoading(false);
         setScreen("home");
-        showToast("Signed out successfully.", "👋");
+        showToast(
+          wasAutoSignOut
+            ? "Signed out after 30 minutes of inactivity."
+            : "Signed out successfully.",
+          wasAutoSignOut ? "⏳" : "👋",
+        );
         return; // return early since we don't need to fetch the user on sign out
       }
 
@@ -144,7 +168,63 @@ function App() {
       ignore = true;
       subscription.unsubscribe();
     };
-  }, [showToast]);
+  }, [clearInactivityTimer, showToast]);
+
+  useEffect(() => {
+    if (!user || !supabase) {
+      clearInactivityTimer();
+      return undefined;
+    }
+
+    const scheduleAutoSignOut = () => {
+      clearInactivityTimer();
+      inactivityTimeoutRef.current = window.setTimeout(async () => {
+        if (signOutInProgressRef.current) {
+          return;
+        }
+
+        signOutInProgressRef.current = true;
+        autoSignOutRef.current = true;
+
+        try {
+          await signOut();
+        } catch {
+          autoSignOutRef.current = false;
+          signOutInProgressRef.current = false;
+          showToast(
+            "Unable to sign out automatically. Please try again.",
+            "⚠️",
+          );
+        }
+      }, INACTIVITY_SIGN_OUT_MS);
+    };
+
+    const handleUserActivity = () => {
+      scheduleAutoSignOut();
+    };
+
+    const activityEvents = [
+      "pointerdown",
+      "keydown",
+      "scroll",
+      "touchstart",
+      "visibilitychange",
+      "focus",
+    ];
+
+    scheduleAutoSignOut();
+
+    activityEvents.forEach((eventName) => {
+      window.addEventListener(eventName, handleUserActivity, { passive: true });
+    });
+
+    return () => {
+      activityEvents.forEach((eventName) => {
+        window.removeEventListener(eventName, handleUserActivity);
+      });
+      clearInactivityTimer();
+    };
+  }, [user, clearInactivityTimer, showToast]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -349,10 +429,13 @@ function App() {
 
   const handleLogout = async () => {
     try {
+      autoSignOutRef.current = false;
+      signOutInProgressRef.current = true;
       console.log("Signing out...");
       await signOut();
       console.log("Signed out successfully.");
     } catch {
+      signOutInProgressRef.current = false;
       showToast("Unable to sign out right now. Please try again.", "⚠️");
     }
   };
