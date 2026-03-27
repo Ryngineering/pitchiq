@@ -353,8 +353,11 @@ using (
 );
 
 -- 11) Leaderboard view (rank + pts + correct + total — excludes void from totals)
+-- SECURITY INVOKER caused each user to see only their own prediction rows due to
+-- RLS on user_predictions. Keep this as a SECURITY DEFINER-style view so
+-- authenticated users can read aggregated leaderboard stats for all players.
 create or replace view public.leaderboard
-with (security_invoker = true) as
+with (security_invoker = false) as
 select
   upf.id as user_id,
   coalesce(upf.display_name, split_part(upf.email, '@', 1), 'Player') as name,
