@@ -146,34 +146,52 @@ body { font-family: 'Nunito', sans-serif; color: var(--text); }
   font-size: 9px; font-weight: 700; border-radius: 20px;
   padding: 3px 8px; letter-spacing: 1px;
 }
-.badge-cta {
-  background: rgba(255,183,0,0.14);
-  color: var(--gold);
-  font-size: 9px;
-  font-weight: 900;
-  border-radius: 20px;
-  padding: 3px 8px;
-  letter-spacing: 1px;
-}
-.badge-picked {
-  background: rgba(0,208,132,0.14);
-  color: var(--green);
-  font-size: 9px;
-  font-weight: 900;
-  border-radius: 20px;
-  padding: 3px 8px;
-  letter-spacing: 1px;
-}
 @keyframes livePulse {
   0%, 100% { opacity: 1; } 50% { opacity: 0.55; }
 }
 
-.mc-body { padding: 14px; display: flex; align-items: center; justify-content: space-between; }
-.mc-team { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 78px; }
+.mc-body {
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.mc-body-split {
+  gap: 0;
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 14px;
+  overflow: hidden;
+  background: rgba(255,255,255,0.02);
+}
+.mc-team {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 78px;
+}
+.mc-side {
+  flex: 1;
+  min-height: 170px;
+  padding: 14px 8px 12px;
+  justify-content: center;
+}
 .mc-logo {
   width: 50px; height: 50px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   font-size: 24px;
+}
+.mc-logo-lg {
+  width: 78px;
+  height: 78px;
+  border-radius: 12px;
+}
+.mc-win-pct {
+  font-size: 12px;
+  font-weight: 800;
+  color: rgba(255,255,255,0.84);
+  text-align: center;
+  line-height: 1.2;
 }
 .mc-short { font-family: 'Bebas Neue'; font-size: 22px; letter-spacing: 1px; }
 .mc-score { font-size: 12px; font-weight: 700; color: var(--sub); }
@@ -181,9 +199,16 @@ body { font-family: 'Nunito', sans-serif; color: var(--text); }
   color: var(--green) !important;
   text-shadow: 0 0 10px rgba(0,208,132,0.22);
 }
-.mc-mid { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.mc-vs { font-family: 'Bebas Neue'; font-size: 13px; color: var(--muted); }
-.mc-venue { font-size: 10px; color: var(--muted); text-align: center; max-width: 88px; line-height: 1.5; font-weight: 600; }
+.mc-mid-divider {
+  width: 1px;
+  align-self: stretch;
+  background: linear-gradient(
+    180deg,
+    rgba(255,255,255,0.04) 0%,
+    rgba(255,255,255,0.35) 50%,
+    rgba(255,255,255,0.04) 100%
+  );
+}
 
 /* PROB BAR */
 .prob-wrap { padding: 0 14px 14px; }
@@ -296,13 +321,47 @@ body { font-family: 'Nunito', sans-serif; color: var(--text); }
 .match-hero-label { font-size: 11px; font-weight: 700; color: var(--muted); letter-spacing: 0.5px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
 
 .big-teams { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.big-teams-split {
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 16px;
+  overflow: hidden;
+  background: rgba(255,255,255,0.02);
+}
 .big-team { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1; }
-.big-logo { width: 76px; height: 76px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 38px; border: 2px solid rgba(255,255,255,0.08); }
+.big-team-side {
+  padding: 16px 10px 14px;
+  min-height: 230px;
+  justify-content: center;
+}
+.big-mid-divider {
+  width: 1px;
+  align-self: stretch;
+  background: linear-gradient(
+    180deg,
+    rgba(255,255,255,0.04) 0%,
+    rgba(255,255,255,0.36) 50%,
+    rgba(255,255,255,0.04) 100%
+  );
+}
+.big-logo {
+  width: 96px;
+  height: 96px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 38px;
+}
+.big-win-pct {
+  font-size: 14px;
+  font-weight: 800;
+  color: rgba(255,255,255,0.86);
+  text-align: center;
+  line-height: 1.2;
+}
 .big-name { font-family: 'Bebas Neue'; font-size: 26px; letter-spacing: 1px; }
 .big-score { font-size: 14px; font-weight: 800; color: var(--sub); }
 .big-overs { font-size: 11px; font-weight: 600; color: var(--muted); }
-.big-vs { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-.big-vs-text { font-family: 'Bebas Neue'; font-size: 15px; color: var(--muted); }
 
 .prob-section { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 14px; }
 .prob-section-label { font-size: 10px; font-weight: 900; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; text-align: center; margin-bottom: 12px; }
@@ -743,6 +802,16 @@ body { font-family: 'Nunito', sans-serif; color: var(--text); }
     border-color: rgba(255,255,255,0.22);
     box-shadow: 0 10px 30px rgba(0,0,0,0.35);
     transform: translateY(-1px);
+  }
+
+  .mc-logo-lg {
+    width: 84px;
+    height: 84px;
+  }
+
+  .big-logo {
+    width: 104px;
+    height: 104px;
   }
 
   /* ─── MATCH DETAIL: centered column ─── */
