@@ -66,6 +66,7 @@ using (true);
 
 alter table public.user_profile enable row level security;
 
+drop policy if exists "profile_select_authenticated" on public.user_profile;
 create policy "profile_select_authenticated"
 on public.user_profile
 for select

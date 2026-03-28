@@ -22,6 +22,40 @@ export default function usePitchData({ onError, user }) {
     [onError],
   );
 
+  const loadPredictions = useCallback(
+    async (userId, isCancelled = () => false) => {
+      const rows = await fetchMyPredictions(userId);
+      if (isCancelled()) {
+        return;
+      }
+
+      const nextPredictions = {};
+      for (const row of rows) {
+        nextPredictions[row.matchId] = {
+          matchId: row.matchId,
+          team: row.picked,
+          prob: row.prob,
+          result: row.result,
+          pts: row.pts ?? calcPts(row.prob),
+          confirmed: row.result !== "pending",
+        };
+      }
+
+      setPredictions(nextPredictions);
+    },
+    [],
+  );
+
+  const loadPoints = useCallback(async (userId, isCancelled = () => false) => {
+    const rows = await fetchLeaderboard(userId);
+    if (isCancelled()) {
+      return;
+    }
+
+    const me = rows.find((row) => row.isMe);
+    setMyPoints(me?.pts ?? 0);
+  }, []);
+
   useEffect(() => {
     if (!user || !supabase) {
       return undefined;
@@ -122,33 +156,30 @@ export default function usePitchData({ onError, user }) {
 
     let isCancelled = false;
 
-    const bootstrapPredictions = async () => {
-      const rows = await fetchMyPredictions(user.id);
-      if (isCancelled) {
-        return;
-      }
+    void loadPredictions(user.id, () => isCancelled);
 
-      const nextPredictions = {};
-      for (const row of rows) {
-        nextPredictions[row.matchId] = {
-          matchId: row.matchId,
-          team: row.picked,
-          prob: row.prob,
-          result: row.result,
-          pts: row.pts ?? calcPts(row.prob),
-          confirmed: row.result !== "pending",
-        };
-      }
-
-      setPredictions(nextPredictions);
-    };
-
-    bootstrapPredictions();
+    const channel = supabase
+      .channel(`user-predictions-${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "user_predictions",
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          void loadPredictions(user.id, () => isCancelled);
+          void loadPoints(user.id, () => isCancelled);
+        },
+      )
+      .subscribe();
 
     return () => {
       isCancelled = true;
+      supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [loadPoints, loadPredictions, user]);
 
   useEffect(() => {
     if (!user || !supabase) {
@@ -157,22 +188,12 @@ export default function usePitchData({ onError, user }) {
 
     let isCancelled = false;
 
-    const loadPoints = async () => {
-      const rows = await fetchLeaderboard(user.id);
-      if (isCancelled) {
-        return;
-      }
-
-      const me = rows.find((row) => row.isMe);
-      setMyPoints(me?.pts ?? 0);
-    };
-
-    loadPoints();
+    void loadPoints(user.id, () => isCancelled);
 
     return () => {
       isCancelled = true;
     };
-  }, [user]);
+  }, [loadPoints, user]);
 
   return {
     matches: user ? matches : [],

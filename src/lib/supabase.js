@@ -193,7 +193,7 @@ function normalizeStatus(status) {
 }
 
 function formatDateLabel(row) {
-  const startTime = row?.raw?.startTime || row?.raw?.startDate;
+  const startTime = row?.start_date_time || row?.raw?.startTime || row?.raw?.startDate;
   if (!startTime) return "TBD";
 
   const dt = new Date(startTime);
@@ -202,21 +202,35 @@ function formatDateLabel(row) {
   const now = new Date();
   const dayOnly = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
   const diffDays = Math.round((dayOnly(dt) - dayOnly(now)) / 86400000);
-  const time = new Intl.DateTimeFormat(undefined, {
+
+  const parts = new Intl.DateTimeFormat(undefined, {
     hour: "numeric",
     minute: "2-digit",
     hour12: true,
-  }).format(dt);
+    timeZoneName: "short",
+  }).formatToParts(dt);
 
-  if (diffDays === 0) return `Today · ${time}`;
-  if (diffDays === 1) return `Tomorrow · ${time}`;
-  if (diffDays === -1) return `Yesterday · ${time}`;
+  const get = (type) => parts.find((p) => p.type === type)?.value ?? "";
+  const time = `${get("hour")}:${get("minute")} ${get("dayPeriod")} ${get("timeZoneName")}`.replace(/\s+/g, " ").trim();
+
+  if (diffDays === 0) return `Today, ${time}`;
+  if (diffDays === 1) return `Tomorrow, ${time}`;
+  if (diffDays === -1) return `Yesterday, ${time}`;
 
   const date = new Intl.DateTimeFormat(undefined, {
     day: "numeric",
     month: "short",
   }).format(dt);
-  return `${date} · ${time}`;
+  return `${date}, ${time}`;
+}
+
+function teamColor(name) {
+  let hash = 5381;
+  for (let i = 0; i < name.length; i++) {
+    hash = ((hash << 5) + hash) ^ name.charCodeAt(i);
+  }
+  const hue = Math.abs(hash) % 360;
+  return `hsl(${hue}, 55%, 35%)`;
 }
 
 function getWinnerCode(row, t1, t2) {
@@ -265,7 +279,7 @@ export function mapDbMatchToFrontend(row, teamLookup = {}) {
     t1Meta: {
       s: t1,
       name: t1Name,
-      bg: TEAM_BG,
+      bg: teamColor(t1Name),
       fg: TEAM_FG,
       logo: t1Logo,
       em: "🏏",
@@ -273,7 +287,7 @@ export function mapDbMatchToFrontend(row, teamLookup = {}) {
     t2Meta: {
       s: t2,
       name: t2Name,
-      bg: TEAM_BG,
+      bg: teamColor(t2Name),
       fg: TEAM_FG,
       logo: t2Logo,
       em: "🏏",

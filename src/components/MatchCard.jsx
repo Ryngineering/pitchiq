@@ -77,7 +77,7 @@ export default function MatchCard({ match, prediction, onClick }) {
             <span
               style={{ fontSize: 10, color: "var(--muted)", fontWeight: 700 }}
             >
-              {match.date.split("·")[0].trim()}
+              {match.date}
             </span>
           )}
         </div>
