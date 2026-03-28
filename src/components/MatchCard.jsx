@@ -32,6 +32,18 @@ export default function MatchCard({
   const hasPrediction = Boolean(pred) && !isDone;
   const needsPrediction = !pred && !isDone;
 
+  const t1RawScore = String(match.t1s ?? "").trim();
+  const t2RawScore = String(match.t2s ?? "").trim();
+  const t1Score =
+    isLive && (!t1RawScore || t1RawScore === "—") ? "0/0" : t1RawScore;
+  const t2Score =
+    isLive && (!t2RawScore || t2RawScore === "—") ? "0/0" : t2RawScore;
+
+  const t1InfoRaw = String(match.home_info ?? match.t1o ?? "").trim();
+  const t2InfoRaw = String(match.away_info ?? match.t2o ?? "").trim();
+  const t1Info = t1InfoRaw ? `(${t1InfoRaw})` : "";
+  const t2Info = t2InfoRaw ? `(${t2InfoRaw})` : "";
+
   const predWon = isDone && pred && match.winner === pred.team;
   const predLost = isDone && pred && match.winner && match.winner !== pred.team;
   const t2p = 100 - match.t1p;
@@ -117,7 +129,8 @@ export default function MatchCard({
           >
             {t1.s}
           </span>
-          {match.t1s && <span className="mc-score">{match.t1s}</span>}
+          {t1Score && <span className="mc-score">{t1Score}</span>}
+          {t1Info && <span className="mc-score-info">{t1Info}</span>}
         </div>
 
         <div className="mc-mid">
@@ -157,7 +170,8 @@ export default function MatchCard({
           >
             {t2.s}
           </span>
-          {match.t2s && <span className="mc-score">{match.t2s}</span>}
+          {t2Score && <span className="mc-score">{t2Score}</span>}
+          {t2Info && <span className="mc-score-info">{t2Info}</span>}
         </div>
       </div>
 

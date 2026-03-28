@@ -28,6 +28,18 @@ export default function MatchDetail({ match, prediction, onPredict, onBack }) {
   const isLive = match.status === "live";
   const hasPred = prediction && !changing;
 
+  const t1RawScore = String(match.t1s ?? "").trim();
+  const t2RawScore = String(match.t2s ?? "").trim();
+  const t1Score =
+    isLive && (!t1RawScore || t1RawScore === "—") ? "0/0" : t1RawScore;
+  const t2Score =
+    isLive && (!t2RawScore || t2RawScore === "—") ? "0/0" : t2RawScore;
+
+  const t1InfoRaw = String(match.home_info ?? match.t1o ?? "").trim();
+  const t2InfoRaw = String(match.away_info ?? match.t2o ?? "").trim();
+  const t1Info = t1InfoRaw ? `(${t1InfoRaw})` : "";
+  const t2Info = t2InfoRaw ? `(${t2InfoRaw})` : "";
+
   const pred = prediction;
   const predWon = isDone && pred && match.winner === pred.team;
 
@@ -76,11 +88,9 @@ export default function MatchDetail({ match, prediction, onPredict, onBack }) {
                 )}
               </div>
               <span className="big-name">{t1.s}</span>
-              {match.t1s && <span className="big-score">{match.t1s}</span>}
-              {match.t1o && (
-                <span className="big-overs">
-                  {match.status !== "upcoming" ? `(${match.t1o} ov)` : ""}
-                </span>
+              {t1Score && <span className="big-score">{t1Score}</span>}
+              {match.status !== "upcoming" && t1Info && (
+                <span className="big-overs">{t1Info}</span>
               )}
             </div>
             <div className="big-vs">
@@ -113,13 +123,9 @@ export default function MatchDetail({ match, prediction, onPredict, onBack }) {
                 )}
               </div>
               <span className="big-name">{t2.s}</span>
-              {match.t2s && <span className="big-score">{match.t2s}</span>}
-              {match.t2o && (
-                <span className="big-overs">
-                  {match.status !== "upcoming" && match.t2s !== "—"
-                    ? `(${match.t2o} ov)`
-                    : ""}
-                </span>
+              {t2Score && <span className="big-score">{t2Score}</span>}
+              {match.status !== "upcoming" && t2Info && (
+                <span className="big-overs">{t2Info}</span>
               )}
             </div>
           </div>

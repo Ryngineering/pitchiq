@@ -217,6 +217,7 @@ body { font-family: 'Nunito', sans-serif; color: var(--text); }
 }
 .mc-short { font-family: 'Bebas Neue'; font-size: 22px; letter-spacing: 1px; }
 .mc-score { font-size: 12px; font-weight: 700; color: var(--sub); }
+.mc-score-info { font-size: 10px; font-weight: 700; color: var(--muted); line-height: 1; margin-top: -2px; }
 .mc-team.picked-team .mc-short {
   color: var(--green) !important;
   text-shadow: 0 0 10px rgba(0,208,132,0.22);
