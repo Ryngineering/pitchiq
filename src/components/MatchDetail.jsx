@@ -30,7 +30,6 @@ export default function MatchDetail({ match, prediction, onPredict, onBack }) {
 
   const pred = prediction;
   const predWon = isDone && pred && match.winner === pred.team;
-  const predLost = isDone && pred && match.winner && match.winner !== pred.team;
 
   const handleConfirm = () => {
     if (!selected) return;

@@ -2,7 +2,12 @@ import React from "react";
 import { calcPts } from "../data";
 import ProbBar from "./ProbBar";
 
-export default function MatchCard({ match, prediction, onClick }) {
+export default function MatchCard({
+  match,
+  prediction,
+  onClick,
+  displayLabel,
+}) {
   const t1 = match.t1Meta || {
     s: match.t1 || "TBD",
     name: match.t1Name || "Unknown Team",
@@ -23,26 +28,60 @@ export default function MatchCard({ match, prediction, onClick }) {
   const isDone = match.status === "completed";
   const isLive = match.status === "live";
   const pred = prediction;
+  const hasPrediction = Boolean(pred) && !isDone;
+  const needsPrediction = !pred && !isDone;
 
   const predWon = isDone && pred && match.winner === pred.team;
   const predLost = isDone && pred && match.winner && match.winner !== pred.team;
+  const t2p = 100 - match.t1p;
+  const pointsPotential = hasPrediction
+    ? (pred.pts ?? calcPts(pred.prob))
+    : Math.max(calcPts(match.t1p), calcPts(t2p));
+
+  let pickedSide = null;
+  if (pred?.team) {
+    if (pred.team === t1.s || pred.team === t1.name) pickedSide = "t1";
+    if (pred.team === t2.s || pred.team === t2.name) pickedSide = "t2";
+  }
+
+  const handleKeyDown = (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      onClick?.();
+    }
+  };
 
   return (
     <div
-      className={`match-card ${isLive ? "live-card" : ""}`}
+      className={`match-card ${isLive ? "live-card" : ""} ${needsPrediction ? "needs-prediction" : ""} ${hasPrediction ? "has-prediction" : ""}`}
       onClick={onClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+      aria-label={`${t1.s} versus ${t2.s} ${needsPrediction ? "prediction pending" : hasPrediction ? "prediction made" : "match details"}`}
     >
       <div className="mc-top">
-        <span className="mc-label">{match.label}</span>
-        {isLive && <span className="badge-live">● LIVE</span>}
-        {match.status === "upcoming" && (
-          <span className="badge-upcoming">UPCOMING</span>
-        )}
-        {isDone && <span className="badge-done">FINAL</span>}
+        <span className="mc-label">{displayLabel || match.label}</span>
+        <div className="mc-top-right">
+          {!isDone && (
+            <span className="mc-pts-pill">
+              {hasPrediction
+                ? `${pointsPotential} pts`
+                : `Up to ${pointsPotential} pts`}
+            </span>
+          )}
+          {isLive && <span className="badge-live">● LIVE</span>}
+          {match.status === "upcoming" && (
+            <span className="badge-upcoming">UPCOMING</span>
+          )}
+          {isDone && <span className="badge-done">FINAL</span>}
+          {needsPrediction && <span className="badge-cta">PICK NOW</span>}
+          {hasPrediction && <span className="badge-picked">✓ PICKED</span>}
+        </div>
       </div>
 
       <div className="mc-body">
-        <div className="mc-team">
+        <div className={`mc-team ${pickedSide === "t1" ? "picked-team" : ""}`}>
           <div className="mc-logo" style={{ background: t1.bg }}>
             {t1.logo ? (
               <img
@@ -66,7 +105,7 @@ export default function MatchCard({ match, prediction, onClick }) {
         <div className="mc-mid">
           <span className="mc-vs">VS</span>
           <span className="mc-venue">{match.venue?.split(",")[0]}</span>
-          {isLive && (
+          {isLive && match.currentOver && (
             <span
               style={{ fontSize: 10, color: "var(--green)", fontWeight: 800 }}
             >
@@ -82,7 +121,7 @@ export default function MatchCard({ match, prediction, onClick }) {
           )}
         </div>
 
-        <div className="mc-team">
+        <div className={`mc-team ${pickedSide === "t2" ? "picked-team" : ""}`}>
           <div className="mc-logo" style={{ background: t2.bg }}>
             {t2.logo ? (
               <img
@@ -115,16 +154,15 @@ export default function MatchCard({ match, prediction, onClick }) {
       )}
 
       {pred && !isDone && (
-        <div className="pred-strip">
-          <div className="pred-dot" />
+        <div className="pred-strip pred-strip-picked">
+          <div className="pred-dot pred-dot-picked" />
           <span className="pred-text">
-            You picked <strong>{pred.team || "TBD"}</strong> ·{" "}
-            {calcPts(pred.prob)} pts if correct
+            Picked <strong>{pred.team || "TBD"}</strong> to win
           </span>
         </div>
       )}
 
-      {isDone && pred && (
+      {isDone && (
         <div className="winner-strip">
           <span className="winner-text">
             {match.winner ? `${match.winner} won` : "Match drawn"}
@@ -137,10 +175,10 @@ export default function MatchCard({ match, prediction, onClick }) {
       )}
 
       {!pred && !isDone && (
-        <div className="pred-strip">
-          <div className="pred-dot" style={{ background: "var(--muted)" }} />
-          <span className="pred-text" style={{ color: "var(--muted)" }}>
-            Tap to make your prediction
+        <div className="pred-strip pred-strip-cta">
+          <div className="pred-dot pred-dot-cta" />
+          <span className="pred-text pred-text-cta">
+            Tap anywhere to make your prediction
           </span>
         </div>
       )}

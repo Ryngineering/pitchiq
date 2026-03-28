@@ -257,6 +257,9 @@ export function mapDbMatchToFrontend(row, teamLookup = {}) {
   const t2Logo = t2FromDb?.logoDataUrl || t2FromDb?.logoUrl || row?.raw?.awayTeam?.logo || null;
   const status = normalizeStatus(row.status);
   const winner = status === "completed" ? getWinnerCode(row, t1, t2) : undefined;
+  const rawStartAt = row?.start_date_time || row?.raw?.startTime || row?.raw?.startDate || null;
+  const startAtTs = rawStartAt ? new Date(rawStartAt).getTime() : null;
+  const leagueName = row?.raw?.league?.name || "";
 
   const liveT1p = parseProbability(row.live_home_win_prediction);
   const prematchT1p = parseProbability(row.prematch_home_win_prediction);
@@ -292,7 +295,9 @@ export function mapDbMatchToFrontend(row, teamLookup = {}) {
       logo: t2Logo,
       em: "🏏",
     },
-    label: row?.raw?.league?.name ? `Match ${row.id} · ${row.raw.league.name}` : `Match ${row.id}`,
+    label: leagueName ? `Match · ${leagueName}` : "Match",
+    leagueName,
+    startAtTs: Number.isFinite(startAtTs) ? startAtTs : null,
     date: formatDateLabel(row),
     venue: row.venue || "Unknown venue",
     status,

@@ -8,14 +8,15 @@ export default function ProbBar({
   t2Color = "#0B5ED7",
   size = "sm",
 }) {
-  const t2p = 100 - t1p;
+  const safeT1p = Math.max(0, Math.min(100, Number(t1p) || 0));
+  const t2p = 100 - safeT1p;
   if (size === "lg") {
     return (
       <div>
         <div className="big-prob-bar">
           <div
             className="big-prob-fill"
-            style={{ width: `${t1p}%`, background: t1Color }}
+            style={{ width: `${safeT1p}%`, background: t1Color }}
           />
           <div
             className="big-prob-fill"
@@ -26,9 +27,9 @@ export default function ProbBar({
           <div className="big-prob-team" style={{ alignItems: "flex-start" }}>
             <span className="big-prob-short">{t1Label}</span>
             <span
-              className={`big-prob-num ${t1p > 55 ? "high" : t1p < 45 ? "low" : "even"}`}
+              className={`big-prob-num ${safeT1p > 55 ? "high" : safeT1p < 45 ? "low" : "even"}`}
             >
-              {t1p}%
+              {safeT1p}%
             </span>
           </div>
           <div className="big-prob-team" style={{ alignItems: "flex-end" }}>
@@ -46,22 +47,33 @@ export default function ProbBar({
   return (
     <div className="prob-wrap">
       <div className="prob-bar">
+        <div className="prob-midline" />
         <div
           className="prob-fill"
-          style={{ width: `${t1p}%`, background: t1Color }}
+          style={{ width: `${safeT1p}%`, background: t1Color }}
         />
         <div
           className="prob-fill"
           style={{ width: `${t2p}%`, background: t2Color }}
         />
       </div>
-      <div className="prob-labels">
-        <span className="prob-pct" style={{ color: t1Color }}>
-          {t1p}%
-        </span>
-        <span className="prob-pct" style={{ color: t2Color }}>
-          {t2p}%
-        </span>
+      <div className="prob-sides">
+        <div className="prob-side">
+          <span className="prob-team" style={{ color: t1Color }}>
+            {t1Label}
+          </span>
+          <span className="prob-pct" style={{ color: t1Color }}>
+            {safeT1p}%
+          </span>
+        </div>
+        <div className="prob-side prob-side-right">
+          <span className="prob-team" style={{ color: t2Color }}>
+            {t2Label}
+          </span>
+          <span className="prob-pct" style={{ color: t2Color }}>
+            {t2p}%
+          </span>
+        </div>
       </div>
     </div>
   );
