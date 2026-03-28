@@ -117,6 +117,9 @@ export default function MatchCard({
               <img
                 src={t1.logo}
                 alt={match.t1Name || t1.name}
+                loading="lazy"
+                decoding="async"
+                referrerPolicy="no-referrer"
                 style={{ width: "100%", height: "100%", objectFit: "contain" }}
               />
             ) : (
@@ -158,6 +161,9 @@ export default function MatchCard({
               <img
                 src={t2.logo}
                 alt={match.t2Name || t2.name}
+                loading="lazy"
+                decoding="async"
+                referrerPolicy="no-referrer"
                 style={{ width: "100%", height: "100%", objectFit: "contain" }}
               />
             ) : (

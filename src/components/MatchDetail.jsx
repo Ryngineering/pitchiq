@@ -77,6 +77,9 @@ export default function MatchDetail({ match, prediction, onPredict, onBack }) {
                   <img
                     src={match.t1Logo}
                     alt={match.t1Name || t1.name}
+                    loading="lazy"
+                    decoding="async"
+                    referrerPolicy="no-referrer"
                     style={{
                       width: "100%",
                       height: "100%",
@@ -112,6 +115,9 @@ export default function MatchDetail({ match, prediction, onPredict, onBack }) {
                   <img
                     src={match.t2Logo}
                     alt={match.t2Name || t2.name}
+                    loading="lazy"
+                    decoding="async"
+                    referrerPolicy="no-referrer"
                     style={{
                       width: "100%",
                       height: "100%",

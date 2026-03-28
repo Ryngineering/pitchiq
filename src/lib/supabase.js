@@ -19,8 +19,7 @@ export const supabase = hasSupabaseConfig
   : null;
 
 const AUTH_INTENT_KEY = "pitchiq-auth-intent";
-const TEAM_CACHE_KEY = "pitchiq-team-cache-v1";
-const TEAM_LOGO_CACHE_PREFIX = "pitchiq-team-logo:";
+const TEAM_CACHE_KEY = "pitchiq-team-cache-v2";
 const TEAM_CACHE_TTL_MS = 4 * 60 * 60 * 1000;
 const LIVE_STATUSES = new Set([
   "in play",
@@ -47,6 +46,10 @@ const COMPLETED_STATUSES = new Set([
 const TEAM_BG = "#0B5ED7";
 const TEAM_FG = "#FFFFFF";
 
+function hostedTeamLogoUrl(teamId) {
+  return `/team-logos/${teamId}.png`;
+}
+
 function readTeamCache() {
   try {
     const raw = localStorage.getItem(TEAM_CACHE_KEY);
@@ -71,33 +74,6 @@ function writeTeamCache(teams) {
       teams,
     }),
   );
-}
-
-function readLogoCache(teamId) {
-  return localStorage.getItem(`${TEAM_LOGO_CACHE_PREFIX}${teamId}`);
-}
-
-function writeLogoCache(teamId, logoDataUrl) {
-  localStorage.setItem(`${TEAM_LOGO_CACHE_PREFIX}${teamId}`, logoDataUrl);
-}
-
-async function fetchLogoAsDataUrl(url) {
-  if (!url) return null;
-
-  try {
-    const response = await fetch(url);
-    if (!response.ok) return null;
-
-    const blob = await response.blob();
-    return await new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(typeof reader.result === "string" ? reader.result : null);
-      reader.onerror = () => resolve(null);
-      reader.readAsDataURL(blob);
-    });
-  } catch {
-    return null;
-  }
 }
 
 export async function loadAndCacheCricketTeams() {
@@ -126,27 +102,14 @@ export async function loadAndCacheCricketTeams() {
       data = activeData;
   }
 
-  const teams = await Promise.all(
-    (data ?? []).map(async (team) => {
-      const cachedLogo = readLogoCache(team.id);
-      let logoDataUrl = cachedLogo;
-
-      if (!logoDataUrl && team.logo_url) {
-        logoDataUrl = await fetchLogoAsDataUrl(team.logo_url);
-        if (logoDataUrl) {
-          writeLogoCache(team.id, logoDataUrl);
-        }
-      }
-
-      return {
-        id: Number(team.id),
-        name: team.name,
-        abbreviation: team.abbreviation,
-        logoUrl: team.logo_url,
-        logoDataUrl,
-      };
-    }),
-  );
+  const teams = (data ?? []).map((team) => ({
+    id: Number(team.id),
+    name: team.name,
+    abbreviation: team.abbreviation,
+    // Serve logos from app origin so Vercel CDN + SW can cache efficiently.
+    logoUrl: hostedTeamLogoUrl(team.id),
+    sourceLogoUrl: team.logo_url,
+  }));
 
   writeTeamCache(teams);
   return teams;
@@ -253,8 +216,16 @@ export function mapDbMatchToFrontend(row, teamLookup = {}) {
   const t2 = t2FromDb?.abbreviation || row?.raw?.awayTeam?.abbreviation || "TBD";
   const t1Name = t1FromDb?.name || row?.raw?.homeTeam?.name || "Unknown Team";
   const t2Name = t2FromDb?.name || row?.raw?.awayTeam?.name || "Unknown Team";
-  const t1Logo = t1FromDb?.logoDataUrl || t1FromDb?.logoUrl || row?.raw?.homeTeam?.logo || null;
-  const t2Logo = t2FromDb?.logoDataUrl || t2FromDb?.logoUrl || row?.raw?.awayTeam?.logo || null;
+  const t1Logo =
+    t1FromDb?.logoUrl ||
+    t1FromDb?.sourceLogoUrl ||
+    row?.raw?.homeTeam?.logo ||
+    null;
+  const t2Logo =
+    t2FromDb?.logoUrl ||
+    t2FromDb?.sourceLogoUrl ||
+    row?.raw?.awayTeam?.logo ||
+    null;
   const status = normalizeStatus(row.status);
   const winner = status === "completed" ? getWinnerCode(row, t1, t2) : undefined;
   const rawStartAt = row?.start_date_time || row?.raw?.startTime || row?.raw?.startDate || null;
