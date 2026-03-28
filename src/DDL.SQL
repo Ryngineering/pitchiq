@@ -74,7 +74,15 @@ to authenticated
 using (auth.uid() = id or public.is_admin());
 
 -- NOTE: INSERT is intentionally omitted — profile rows are created exclusively
--- by the tg_create_user_profile trigger on auth.users. Clients cannot insert.
+-- by the tg_create_user_profile trigger on auth.users. We still allow
+-- authenticated users to insert ONLY their own row as a safe fallback.
+drop policy if exists "profile_insert_own" on public.user_profile;
+create policy "profile_insert_own"
+on public.user_profile
+for insert
+to authenticated
+with check (auth.uid() = id);
+
 drop policy if exists "profile_update_own" on public.user_profile;
 create policy "profile_update_own"
 on public.user_profile

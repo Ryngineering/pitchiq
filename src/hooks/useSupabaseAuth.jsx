@@ -161,11 +161,14 @@ export default function useSupabaseAuth({
           }
         }
 
-        if (event === "SIGNED_IN" && nextUser) {
+        if ((event === "SIGNED_IN" || event === "INITIAL_SESSION") && nextUser) {
           window.setTimeout(() => {
             void refreshUserProfile(nextUser);
           }, 0);
 
+        }
+
+        if (event === "SIGNED_IN" && nextUser) {
           if (consumeAuthIntent()) {
             onSignedInRef.current?.(nextUser);
           }

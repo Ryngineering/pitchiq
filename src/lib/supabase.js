@@ -481,21 +481,21 @@ export async function signOut() {
 
 /**
  * Upsert a user_profile row from auth user data.
- * Called after every sign-in so display_name / avatar_url stay fresh.
- * INSERT is intentionally omitted — the DB trigger handles row creation.
+ * Called after sign-in/session restore so display_name / avatar_url stay fresh.
+ * Includes insert fallback so profile creation self-heals if DB trigger is missing.
  */
 export async function refreshUserProfile(authUser) {
   if (!supabase || !authUser?.id) return null;
 
   const { data, error } = await supabase
     .from("user_profile")
-    .update({
+    .upsert({
+      id: authUser.id,
       email: authUser.email,
       display_name: authUser.name,
       avatar_url: authUser.avatarUrl ?? null,
       updated_at: new Date().toISOString(),
-    })
-    .eq("id", authUser.id)
+    }, { onConflict: "id" })
     .select()
     .single();
 
