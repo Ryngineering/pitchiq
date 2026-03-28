@@ -326,6 +326,7 @@ function App() {
         <ProfileScreen
           user={user}
           onLogout={handleLogout}
+          onNavigate={(s) => setScreen(s)}
           predictions={predictions}
           myPoints={myPoints}
         />

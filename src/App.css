@@ -554,6 +554,47 @@ body { font-family: 'Nunito', sans-serif; color: var(--text); }
 .profile-btn:hover { background: var(--card2); border-color: rgba(255,255,255,0.2); }
 .profile-btn:active { transform: scale(0.98); }
 
+/* Settings gear + dropdown */
+.settings-wrap { position: relative; display: flex; align-items: center; gap: 8px; }
+.settings-btn {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--card2); border: 1px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--muted);
+  transition: background 0.15s, color 0.15s; flex-shrink: 0;
+}
+.settings-btn:hover { background: var(--card); color: var(--sub); }
+.settings-dropdown {
+  position: absolute; top: calc(100% + 8px); right: 0;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4); z-index: 100; min-width: 150px;
+}
+.settings-item {
+  width: 100%; padding: 13px 16px; background: none; border: none;
+  color: var(--red, #ff4757); font-size: 14px; font-weight: 800;
+  font-family: 'Nunito', sans-serif; text-align: left;
+  cursor: pointer; display: flex; align-items: center; gap: 8px;
+  transition: background 0.12s;
+}
+.settings-item:hover { background: rgba(255,71,87,0.08); }
+
+/* No-predictions CTA */
+.profile-cta-btn {
+  background: none; border: none; padding: 0;
+  font-size: 13px; font-weight: 800; font-family: 'Nunito', sans-serif;
+  color: var(--orange); cursor: pointer;
+  display: flex; align-items: center; gap: 4px;
+  transition: opacity 0.15s;
+}
+.profile-cta-btn:hover { opacity: 0.75; }
+
+/* Muted zero-state stat value */
+.stat-val-muted { font-family: 'Bebas Neue'; font-size: 30px; color: var(--muted); }
+
+/* Google badge in profile-sub */
+.profile-sub-google { display: flex; align-items: center; gap: 5px; }
+
 .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; padding: 4px 16px 16px; }
 .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px 10px; text-align: center; }
 .stat-val { font-family: 'Bebas Neue'; font-size: 30px; color: var(--gold); }
