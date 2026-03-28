@@ -90,7 +90,7 @@ export default function MatchDetail({ match, prediction, onPredict, onBack }) {
               <span className="big-name">{t1.s}</span>
               {t1Score && <span className="big-score">{t1Score}</span>}
               {match.status !== "upcoming" && t1Info && (
-                <span className="big-overs">{t1Info}</span>
+                <span className="big-overs">{t1Info} ov</span>
               )}
             </div>
             <div className="big-vs">
@@ -125,7 +125,7 @@ export default function MatchDetail({ match, prediction, onPredict, onBack }) {
               <span className="big-name">{t2.s}</span>
               {t2Score && <span className="big-score">{t2Score}</span>}
               {match.status !== "upcoming" && t2Info && (
-                <span className="big-overs">{t2Info}</span>
+                <span className="big-overs">{t2Info} ov</span>
               )}
             </div>
           </div>

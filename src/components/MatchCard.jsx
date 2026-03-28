@@ -130,7 +130,7 @@ export default function MatchCard({
             {t1.s}
           </span>
           {t1Score && <span className="mc-score">{t1Score}</span>}
-          {t1Info && <span className="mc-score-info">{t1Info}</span>}
+          {t1Info && <span className="mc-score-info">{t1Info} ov</span>}
         </div>
 
         <div className="mc-mid">
@@ -171,7 +171,7 @@ export default function MatchCard({
             {t2.s}
           </span>
           {t2Score && <span className="mc-score">{t2Score}</span>}
-          {t2Info && <span className="mc-score-info">{t2Info}</span>}
+          {t2Info && <span className="mc-score-info">{t2Info} ov</span>}
         </div>
       </div>
 
