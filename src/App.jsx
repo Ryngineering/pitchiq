@@ -77,10 +77,11 @@ function App() {
 
   const approvedUser = user?.isApproved ? user : null;
 
-  const { matches, myPoints, predictions, setPredictions } = usePitchData({
-    onError: handleAuthError,
-    user: approvedUser,
-  });
+  const { matches, myPoints, predictions, setPredictions, pickCounts, streak } =
+    usePitchData({
+      onError: handleAuthError,
+      user: approvedUser,
+    });
 
   const handleIdle = useCallback(() => {
     if (!user) {
@@ -302,6 +303,8 @@ function App() {
           matches={matches}
           predictions={predictions}
           myPoints={myPoints}
+          pickCounts={pickCounts}
+          streak={streak}
           onMatch={(id) => {
             setSelectedId(id);
             setScreen("match");

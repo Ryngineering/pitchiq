@@ -7,6 +7,7 @@ export default function MatchCard({
   prediction,
   onClick,
   displayLabel,
+  pickCounts,
 }) {
   const t1 = match.t1Meta || {
     s: match.t1 || "TBD",
@@ -43,6 +44,23 @@ export default function MatchCard({
     if (pred.team === t1.s || pred.team === t1.name) pickedSide = "t1";
     if (pred.team === t2.s || pred.team === t2.name) pickedSide = "t2";
   }
+
+  // Crowd pick data (only meaningful for non-completed matches)
+  const totalPicks = Object.values(pickCounts ?? {}).reduce((a, b) => a + b, 0);
+  let crowdFavId = null;
+  let crowdFavCount = 0;
+  for (const [tid, cnt] of Object.entries(pickCounts ?? {})) {
+    if (Number(cnt) > crowdFavCount) {
+      crowdFavCount = Number(cnt);
+      crowdFavId = Number(tid);
+    }
+  }
+  const crowdFavTeam =
+    crowdFavId === match.t1TeamId
+      ? t1.s
+      : crowdFavId === match.t2TeamId
+        ? t2.s
+        : null;
 
   const handleKeyDown = (event) => {
     if (event.key === "Enter" || event.key === " ") {
@@ -159,6 +177,17 @@ export default function MatchCard({
           <span className="pred-text">
             Picked <strong>{pred.team || "TBD"}</strong> to win
           </span>
+          <div className="mc-crowd">
+            <span className="mc-crowd-icon">👥</span>
+            <span className="mc-crowd-short">
+              {totalPicks > 0 ? totalPicks : "?"}
+            </span>
+            <span className="mc-crowd-full">
+              {totalPicks === 0 || !crowdFavTeam
+                ? "Be the trendsetter ✨"
+                : `${crowdFavCount}/${totalPicks} picked ${crowdFavTeam}`}
+            </span>
+          </div>
         </div>
       )}
 
@@ -180,6 +209,17 @@ export default function MatchCard({
           <span className="pred-text pred-text-cta">
             Tap anywhere to make your prediction
           </span>
+          <div className="mc-crowd">
+            <span className="mc-crowd-icon">👥</span>
+            <span className="mc-crowd-short">
+              {totalPicks > 0 ? totalPicks : "?"}
+            </span>
+            <span className="mc-crowd-full">
+              {totalPicks === 0 || !crowdFavTeam
+                ? "Be the trendsetter ✨"
+                : `${crowdFavCount}/${totalPicks} picked ${crowdFavTeam}`}
+            </span>
+          </div>
         </div>
       )}
     </div>

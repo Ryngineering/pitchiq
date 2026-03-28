@@ -670,6 +670,39 @@ export async function fetchMyPredictions(userId) {
   }));
 }
 
+// ─── CROWD PICK COUNTS ────────────────────────────────────────────────────────
+
+/**
+ * Fetch aggregated pick counts for a set of matches via SECURITY DEFINER RPC.
+ * Uses get_match_pick_counts() which bypasses per-user RLS on user_predictions
+ * but only returns COUNT aggregates — no user_id is ever exposed.
+ *
+ * @param {number[]} matchIds
+ * @returns {Promise<Record<number, Record<number, number>>>}
+ *   Shape: { matchId → { teamId → count } }
+ */
+export async function fetchMatchPickCounts(matchIds) {
+  if (!supabase || !matchIds?.length) return {};
+
+  const { data, error } = await supabase.rpc("get_match_pick_counts", {
+    p_match_ids: matchIds,
+  });
+
+  if (error) {
+    console.error("fetchMatchPickCounts error:", error);
+    return {};
+  }
+
+  const result = {};
+  for (const row of data ?? []) {
+    const mid = Number(row.match_id);
+    const tid = Number(row.picked_team_id);
+    if (!result[mid]) result[mid] = {};
+    result[mid][tid] = Number(row.pick_count);
+  }
+  return result;
+}
+
 // ─── LEADERBOARD ──────────────────────────────────────────────────────────────
 
 /**

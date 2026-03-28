@@ -826,3 +826,67 @@ body { font-family: 'Nunito', sans-serif; color: var(--text); }
   .login-logo { font-size: 88px; }
   .login-headline { font-size: 32px; }
 }
+
+/* ── STREAK CHIP ── */
+.streak-chip {
+  background: linear-gradient(135deg, rgba(255,98,0,0.15), rgba(255,183,0,0.1));
+  border: 1px solid rgba(255,183,0,0.3);
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 900;
+  color: var(--gold);
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  animation: streakGlow 3s ease-in-out infinite;
+}
+@keyframes streakGlow {
+  0%, 100% { box-shadow: none; }
+  50%       { box-shadow: 0 0 14px rgba(255,183,0,0.2); }
+}
+
+/* ── MATCH CARD CROWD PICK PILL ── */
+.mc-crowd {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+  cursor: default;
+  overflow: hidden;
+}
+.mc-crowd-icon {
+  font-size: 11px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.mc-crowd-short {
+  font-size: 10px;
+  font-weight: 900;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  transition: max-width 0.25s cubic-bezier(0.4,0,0.2,1), opacity 0.15s;
+  max-width: 24px;
+}
+.mc-crowd-full {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: 0;
+  opacity: 0;
+  transition: max-width 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.2s;
+}
+/* Desktop hover: collapse count badge, expand full message */
+@media (hover: hover) {
+  .match-card:hover .mc-crowd-short {
+    max-width: 0;
+    opacity: 0;
+  }
+  .match-card:hover .mc-crowd-full {
+    max-width: 180px;
+    opacity: 1;
+  }
+}

@@ -24,6 +24,8 @@ export default function HomeScreen({
   onMatch,
   myPoints,
   onBell,
+  pickCounts,
+  streak,
 }) {
   const live = matches.filter((m) => m.status === "live");
   const upcoming = matches.filter((m) => m.status === "upcoming");
@@ -43,6 +45,9 @@ export default function HomeScreen({
       <div className="header">
         <span className="header-logo">🏏 PITCHIQ</span>
         <div className="header-right">
+          {streak >= 3 && (
+            <span className="streak-chip">🔥 {streak} in a row</span>
+          )}
           <span className="pts-chip">⚡ {myPoints} PTS</span>
           <button className="bell-btn" onClick={onBell}>
             <Bell size={16} color="rgba(255,255,255,0.6)" />
@@ -61,6 +66,7 @@ export default function HomeScreen({
                 match={m}
                 displayLabel={buildDisplayLabel(m, sequenceByMatchId[m.id])}
                 prediction={predictions[m.id]}
+                pickCounts={pickCounts?.[m.id]}
                 onClick={() => onMatch(m.id)}
               />
             ))}
@@ -76,6 +82,7 @@ export default function HomeScreen({
                 match={m}
                 displayLabel={buildDisplayLabel(m, sequenceByMatchId[m.id])}
                 prediction={predictions[m.id]}
+                pickCounts={pickCounts?.[m.id]}
                 onClick={() => onMatch(m.id)}
               />
             ))}
