@@ -438,7 +438,27 @@ body { font-family: 'Nunito', sans-serif; color: var(--text); }
   border: 1px solid var(--border); background: var(--card);
 }
 .lb-row.me { background: var(--orange-dim); border-color: rgba(255,98,0,0.25); }
+.lb-rank-wrap {
+  width: 42px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
 .lb-rank { font-family: 'Bebas Neue'; font-size: 16px; color: var(--muted); width: 22px; text-align: center; }
+.lb-rank-move {
+  min-width: 36px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 900;
+  text-align: center;
+  letter-spacing: 0.3px;
+}
+.lb-rank-move.up { background: rgba(0,208,132,0.14); color: var(--green); }
+.lb-rank-move.down { background: rgba(255,71,87,0.14); color: var(--red); }
+.lb-rank-move.flat { background: rgba(255,255,255,0.07); color: var(--muted); }
 .lb-av {
   width: 36px; height: 36px; border-radius: 50%;
   background: var(--card2); display: flex; align-items: center;
@@ -450,6 +470,65 @@ body { font-family: 'Nunito', sans-serif; color: var(--text); }
 .lb-name { font-size: 14px; font-weight: 900; }
 .lb-stat { font-size: 11px; color: var(--muted); font-weight: 700; margin-top: 1px; }
 .lb-pts { font-family: 'Bebas Neue'; font-size: 24px; color: var(--gold); }
+.lb-empty {
+  padding: 24px 18px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015));
+  text-align: center;
+}
+.lb-empty-title {
+  font-family: 'Bebas Neue';
+  font-size: 24px;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+.lb-empty-copy {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--sub);
+  font-weight: 700;
+}
+.lb-context {
+  padding: 8px 16px 20px;
+}
+.lb-context-title {
+  font-family: 'Bebas Neue';
+  font-size: 24px;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+.lb-context-copy {
+  font-size: 13px;
+  color: var(--sub);
+  font-weight: 700;
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+.lb-context-grid {
+  display: grid;
+  gap: 8px;
+}
+.lb-context-card {
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--card);
+}
+.lb-context-label {
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.lb-context-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--sub);
+  line-height: 1.5;
+}
 
 /* ── PROFILE ── */
 .profile-hero { padding: 24px 16px 16px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
@@ -665,6 +744,12 @@ body { font-family: 'Nunito', sans-serif; color: var(--text); }
     max-width: 700px;
     margin: 0 auto;
     padding: 0 32px 8px;
+  }
+
+  .lb-context {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 8px 32px 20px;
   }
 
   /* ─── PROFILE: centered ─── */

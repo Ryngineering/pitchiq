@@ -320,7 +320,7 @@ function App() {
         />
       )}
       {screen === "leaderboard" && (
-        <LeaderboardScreen currentUserId={user.id} />
+        <LeaderboardScreen currentUserId={user.id} matches={matches} />
       )}
       {screen === "profile" && (
         <ProfileScreen
