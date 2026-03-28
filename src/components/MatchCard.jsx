@@ -1,5 +1,6 @@
 import React from "react";
 import { calcPts } from "../data";
+import ProbBar from "./ProbBar";
 
 export default function MatchCard({
   match,
@@ -8,17 +9,6 @@ export default function MatchCard({
   displayLabel,
   pickCounts,
 }) {
-  const toRgba = (hex, alpha, fallback = `rgba(255,255,255,${alpha})`) => {
-    if (!hex || typeof hex !== "string") return fallback;
-    const cleanHex = hex.trim().replace("#", "");
-    if (!/^[\da-fA-F]{6}$/.test(cleanHex)) return fallback;
-    const intVal = Number.parseInt(cleanHex, 16);
-    const r = (intVal >> 16) & 255;
-    const g = (intVal >> 8) & 255;
-    const b = intVal & 255;
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-  };
-
   const t1 = match.t1Meta || {
     s: match.t1 || "TBD",
     name: match.t1Name || "Unknown Team",
@@ -44,11 +34,10 @@ export default function MatchCard({
 
   const predWon = isDone && pred && match.winner === pred.team;
   const predLost = isDone && pred && match.winner && match.winner !== pred.team;
-  const t1p = Math.min(100, Math.max(0, Number(match.t1p ?? 50)));
-  const t2p = 100 - t1p;
+  const t2p = 100 - match.t1p;
   const pointsPotential = hasPrediction
     ? (pred.pts ?? calcPts(pred.prob))
-    : Math.max(calcPts(t1p), calcPts(t2p));
+    : Math.max(calcPts(match.t1p), calcPts(t2p));
 
   let pickedSide = null;
   if (pred?.team) {
@@ -73,13 +62,6 @@ export default function MatchCard({
         ? t2.s
         : null;
 
-  const communityText =
-    totalPicks > 0
-      ? `${totalPicks} community ${totalPicks === 1 ? "pick" : "picks"}`
-      : crowdFavTeam
-        ? `Trend: ${crowdFavTeam}`
-        : "No community picks";
-
   const handleKeyDown = (event) => {
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
@@ -97,23 +79,15 @@ export default function MatchCard({
       aria-label={`${t1.s} versus ${t2.s} ${needsPrediction ? "prediction pending" : hasPrediction ? "prediction made" : "match details"}`}
     >
       <div className="mc-top">
-        <div className="mc-heading">
-          <span className="mc-label">{displayLabel || match.label}</span>
-          <span className="mc-sub-label">
-            {match.venue?.split(",")[0] || match.date || "Venue TBA"}
-          </span>
-        </div>
+        <span className="mc-label">{displayLabel || match.label}</span>
         <div className="mc-top-right">
           {isLive && <span className="badge-live">● LIVE</span>}
           {match.status === "upcoming" && (
-            <span className="badge-upcoming">
-              UPCOMING <span className="badge-dot" />
-            </span>
+            <span className="badge-upcoming">UPCOMING</span>
           )}
           {isDone && <span className="badge-done">FINAL</span>}
-          {!isDone && hasPrediction && (
-            <span className="badge-picked">✓ PICKED</span>
-          )}
+          {needsPrediction && <span className="badge-cta">PICK NOW</span>}
+          {hasPrediction && <span className="badge-picked">✓ PICKED</span>}
           {!isDone && (
             <span className="mc-pts-pill">
               {hasPrediction
@@ -124,18 +98,9 @@ export default function MatchCard({
         </div>
       </div>
 
-      <div className="mc-body-split">
-        <div
-          className={`mc-side ${pickedSide === "t1" ? "picked-side" : ""}`}
-          style={{
-            "--mc-side-tint": toRgba(t1.bg, 0.18, "rgba(39, 215, 131, 0.18)"),
-            "--mc-side-glow": toRgba(t1.bg, 0.55, "rgba(39, 215, 131, 0.55)"),
-          }}
-        >
-          <div
-            className="mc-logo mc-logo-square"
-            style={{ background: "transparent" }}
-          >
+      <div className="mc-body">
+        <div className={`mc-team ${pickedSide === "t1" ? "picked-team" : ""}`}>
+          <div className="mc-logo" style={{ background: t1.bg }}>
             {t1.logo ? (
               <img
                 src={t1.logo}
@@ -146,24 +111,36 @@ export default function MatchCard({
               <span>{t1.em}</span>
             )}
           </div>
-          <span className="mc-short mc-short-bright">{t1.s}</span>
-          <span className="mc-probability">{t1p}% Win Probability</span>
+          <span
+            className="mc-short"
+            style={{ color: t1.fg === "#FFFFFF" ? "#fff" : t1.bg }}
+          >
+            {t1.s}
+          </span>
           {match.t1s && <span className="mc-score">{match.t1s}</span>}
         </div>
 
-        <div className="mc-split-divider" />
+        <div className="mc-mid">
+          <span className="mc-vs">VS</span>
+          <span className="mc-venue">{match.venue?.split(",")[0]}</span>
+          {isLive && match.currentOver && (
+            <span
+              style={{ fontSize: 10, color: "var(--green)", fontWeight: 800 }}
+            >
+              Ov {match.currentOver}
+            </span>
+          )}
+          {match.status === "upcoming" && (
+            <span
+              style={{ fontSize: 10, color: "var(--muted)", fontWeight: 700 }}
+            >
+              {match.date}
+            </span>
+          )}
+        </div>
 
-        <div
-          className={`mc-side ${pickedSide === "t2" ? "picked-side" : ""}`}
-          style={{
-            "--mc-side-tint": toRgba(t2.bg, 0.18, "rgba(255, 92, 92, 0.16)"),
-            "--mc-side-glow": toRgba(t2.bg, 0.55, "rgba(255, 92, 92, 0.55)"),
-          }}
-        >
-          <div
-            className="mc-logo mc-logo-square"
-            style={{ background: "transparent" }}
-          >
+        <div className={`mc-team ${pickedSide === "t2" ? "picked-team" : ""}`}>
+          <div className="mc-logo" style={{ background: t2.bg }}>
             {t2.logo ? (
               <img
                 src={t2.logo}
@@ -174,26 +151,42 @@ export default function MatchCard({
               <span>{t2.em}</span>
             )}
           </div>
-          <span className="mc-short mc-short-bright">{t2.s}</span>
-          <span className="mc-probability">{t2p}% Win Probability</span>
+          <span
+            className="mc-short"
+            style={{ color: t2.fg === "#FFFFFF" ? "#fff" : t2.bg }}
+          >
+            {t2.s}
+          </span>
           {match.t2s && <span className="mc-score">{match.t2s}</span>}
         </div>
       </div>
 
       {!isDone && (
-        <div className={`mc-pick-strip ${hasPrediction ? "picked" : ""}`}>
-          <span className="mc-pick-text">
-            {hasPrediction ? (
-              <>
-                My Pick: <strong>✓ {pred.team || "TBD"}</strong>
-              </>
-            ) : (
-              "My Pick: Not selected"
-            )}
+        <ProbBar
+          t1p={match.t1p}
+          t1Label={t1.s}
+          t2Label={t2.s}
+          t1Color={t1.bg}
+          t2Color={t2.bg}
+        />
+      )}
+
+      {pred && !isDone && (
+        <div className="pred-strip pred-strip-picked">
+          <div className="pred-dot pred-dot-picked" />
+          <span className="pred-text">
+            Picked <strong>{pred.team || "TBD"}</strong> to win
           </span>
-          <div className="mc-community-pill" aria-label="community pick count">
-            <span className="mc-community-icon">👥</span>
-            <span>{communityText}</span>
+          <div className="mc-crowd">
+            <span className="mc-crowd-icon">👥</span>
+            <span className="mc-crowd-short">
+              {totalPicks > 0 ? totalPicks : "?"}
+            </span>
+            <span className="mc-crowd-full">
+              {totalPicks === 0 || !crowdFavTeam
+                ? "Be the trendsetter ✨"
+                : `${crowdFavCount}/${totalPicks} picked ${crowdFavTeam}`}
+            </span>
           </div>
         </div>
       )}
@@ -207,6 +200,24 @@ export default function MatchCard({
           {predWon && <span className="winner-pts">+{pred.pts} pts ✓</span>}
           {predLost && <span className="loser-pts">—</span>}
           {!pred && <span className="loser-pts">No pick</span>}
+        </div>
+      )}
+
+      {!pred && !isDone && (
+        <div className="pred-strip pred-strip-cta">
+          <div className="pred-dot pred-dot-cta" />
+          <span className="pred-text pred-text-cta">Make your prediction</span>
+          <div className="mc-crowd">
+            <span className="mc-crowd-icon">👥</span>
+            <span className="mc-crowd-short">
+              {totalPicks > 0 ? totalPicks : "?"}
+            </span>
+            <span className="mc-crowd-full">
+              {totalPicks === 0 || !crowdFavTeam
+                ? "Be the trendsetter ✨"
+                : `${crowdFavCount}/${totalPicks} picked ${crowdFavTeam}`}
+            </span>
+          </div>
         </div>
       )}
     </div>
