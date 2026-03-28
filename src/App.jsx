@@ -20,6 +20,9 @@ function App() {
   const [selectedId, setSelectedId] = useState(null);
   const [toast, setToast] = useState(null);
   const [isRefreshingApproval, setIsRefreshingApproval] = useState(false);
+  const [isOffline, setIsOffline] = useState(
+    typeof navigator !== "undefined" ? !navigator.onLine : false,
+  );
   const toastTimeoutRef = useRef(null);
 
   const showToast = useCallback((msg, emoji = "🏏") => {
@@ -38,6 +41,26 @@ function App() {
       }
     };
   }, []);
+
+  useEffect(() => {
+    const handleOffline = () => {
+      setIsOffline(true);
+      showToast("You are offline. Live updates are paused.", "📴");
+    };
+
+    const handleOnline = () => {
+      setIsOffline(false);
+      showToast("Back online. Syncing latest updates.", "🌐");
+    };
+
+    window.addEventListener("offline", handleOffline);
+    window.addEventListener("online", handleOnline);
+
+    return () => {
+      window.removeEventListener("offline", handleOffline);
+      window.removeEventListener("online", handleOnline);
+    };
+  }, [showToast]);
 
   const handleAuthError = useCallback(
     (message) => {
@@ -228,6 +251,9 @@ function App() {
   if (isAuthLoading) {
     return (
       <div className="app">
+        {isOffline && (
+          <div className="offline-banner">Offline mode: live data may be stale.</div>
+        )}
         <div className="login-screen">
           <div className="login-logo-wrap">
             <span className="login-ball">🏏</span>
@@ -240,12 +266,22 @@ function App() {
   }
 
   if (!user) {
-    return <LoginScreen onLogin={login} />;
+    return (
+      <>
+        {isOffline && (
+          <div className="offline-banner">Offline mode: sign-in requires internet.</div>
+        )}
+        <LoginScreen onLogin={login} />
+      </>
+    );
   }
 
   if (!user.isApproved) {
     return (
       <div className="app">
+        {isOffline && (
+          <div className="offline-banner">Offline mode: approval checks require internet.</div>
+        )}
         {toast && <Toast msg={toast.msg} emoji={toast.emoji} />}
 
         <div className="login-screen">
@@ -296,6 +332,9 @@ function App() {
 
   return (
     <div className="app">
+      {isOffline && (
+        <div className="offline-banner">Offline mode: live data may be stale.</div>
+      )}
       {toast && <Toast msg={toast.msg} emoji={toast.emoji} />}
 
       {screen === "home" && (

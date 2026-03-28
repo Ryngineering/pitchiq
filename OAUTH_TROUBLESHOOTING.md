@@ -1,254 +1,133 @@
-# 🔧 Google OAuth Error 401: invalid_client - Troubleshooting Guide
+# OAuth Troubleshooting (Supabase + Google)
 
-## Problem
+## Scope
 
-When you try to sign in with Google, you get:
-
-```
-The OAuth client was not found.
-Error 401: invalid_client
-```
-
-## Root Causes & Solutions
-
-### ✅ Solution 1: Authorize localhost:5173 in Google Console
-
-The most common issue is that **localhost:5173 is NOT in your authorized origins list**.
-
-**Steps:**
-
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Select your **PitchIQ** project
-3. Go to **APIs & Services** > **Credentials** (left sidebar)
-4. Click on your **OAuth 2.0 Client ID** (the "Web application" one)
-5. Look for **Authorized JavaScript origins**
-6. Click the **+ ADD URI** button
-7. Add exactly: `http://localhost:5173`
-8. Click **SAVE**
-9. **Restart your dev server**: `npm run dev`
-
-**Visual Check:**
-Your authorized origins should look like:
-
-```
-✓ http://localhost:5173
-✓ http://localhost:3000 (if also using this)
-✓ https://yourdomain.com (for production)
-```
+This guide applies to PitchIQ's active auth architecture:
+- Supabase Auth
+- Google provider via `signInWithOAuth`
+- Redirect back to app domain
 
 ---
 
-### ✅ Solution 2: Clear Browser Cache & Restart Dev Server
+## Most Common Failures
 
-Sometimes the browser caches the old OAuth configuration.
+## 1) Redirect URL mismatch
+
+Symptoms:
+- OAuth opens but returns with error
+- Login loops back to login screen
+
+Checks:
+1. `VITE_SUPABASE_REDIRECT_URL` matches your current environment domain.
+2. Supabase Redirect URLs include:
+- `http://localhost:5173`
+- `https://<your-production-domain>`
+3. Google OAuth credentials allow corresponding origin and callback.
+
+Project policy:
+- Supported auth domains: localhost + production only
+- Preview deployments are not configured for OAuth
+
+---
+
+## 2) Supabase provider misconfiguration
+
+Symptoms:
+- Clicking login fails immediately
+- Errors mention provider disabled or invalid config
+
+Checks:
+1. Supabase Google provider is enabled.
+2. Google client ID and secret are set in Supabase provider settings.
+3. Site URL in Supabase matches your production domain.
+
+---
+
+## 3) Missing frontend env variables
+
+Symptoms:
+- App shows auth config issues
+- Sign-in does nothing or throws startup error
+
+Required vars:
 
 ```bash
-# Stop current dev server (Ctrl+C)
-
-# Clear npm cache
-npm cache clean --force
-
-# Restart dev server
-npm run dev
+VITE_SUPABASE_URL
+VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY
+VITE_SUPABASE_REDIRECT_URL
 ```
 
-Then:
-
-1. Clear browser cache (DevTools > Network > "Disable cache" checkbox)
-2. Hard refresh: `Cmd + Shift + R` (Mac) or `Ctrl + Shift + R` (Windows)
-3. Try logging in again
+After changing env values:
+1. restart dev server
+2. hard refresh browser
 
 ---
 
-### ✅ Solution 3: Verify Client ID Format
+## 4) Service worker cache interference (PWA)
 
-Your Client ID should look like:
+Symptoms:
+- Auth callback appears stale
+- Old auth behavior persists after deploy
 
-```
-1264570955957-rvv3c2dj19sf6d7svf7sh7gm9qiavm9t.apps.googleusercontent.com
-```
-
-Check `.env.local`:
-
-```bash
-cat .env.local
-```
-
-Should output:
-
-```
-VITE_GOOGLE_CLIENT_ID=1264570955957-rvv3c2dj19sf6d7svf7sh7gm9qiavm9t.apps.googleusercontent.com
-```
-
-✅ If it matches, proceed to Solution 1
-❌ If it's different or empty, update it
+Checks:
+1. Ensure service worker excludes Supabase/Google auth requests from caching.
+2. Ensure `sw.js` is served with no-cache headers.
+3. Hard refresh and close/reopen app once after deployment.
 
 ---
 
-### ✅ Solution 4: Check Environment Variables are Loading
+## 5) Session appears lost after login
 
-In your browser DevTools console, run:
+Symptoms:
+- Login succeeds but user appears signed out on reload
 
-```javascript
-console.log(import.meta.env.VITE_GOOGLE_CLIENT_ID);
-```
-
-**Expected output:**
-
-```
-1264570955957-rvv3c2dj19sf6d7svf7sh7gm9qiavm9t.apps.googleusercontent.com
-```
-
-**If output is `undefined`:**
-
-1. Stop dev server: `Ctrl+C`
-2. Restart: `npm run dev`
-3. Wait for terminal to show "Local: http://localhost:5173"
-4. Try again in console
-
----
-
-### ✅ Solution 5: Check if OAuth Client Exists
-
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Go to **APIs & Services** > **Credentials**
-3. Look for a row with:
-   - Application type: **Web application**
-   - Name: Something like "Web client 1" or "PitchIQ Web Client"
-
-**If not found:**
-
-- Your credentials may have been deleted
-- Create new credentials:
-  - Click **+ CREATE CREDENTIALS**
-  - Select **OAuth 2.0 Client ID**
-  - Choose **Web application**
-  - Add `http://localhost:5173` to **Authorized JavaScript origins**
-  - Copy the new Client ID
-
----
-
-### ✅ Solution 6: Verify Google+ API is Enabled
-
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Go to **APIs & Services** > **Library**
-3. Search for **"Google Identity"**
-4. Click **Google Identity Services API**
-5. Click **ENABLE** (if not already enabled)
-
-Also enable:
-
-- Search for **"Google Plus"** → Enable if available
-- Search for **"OAuth"** → Any OAuth-related APIs should be enabled
-
----
-
-## Complete Checklist
-
-Before trying to login again, verify:
-
-- [ ] `VITE_GOOGLE_CLIENT_ID` is in `.env.local`
-- [ ] Client ID doesn't contain any extra spaces or quotes
-- [ ] `http://localhost:5173` is in Authorized JavaScript origins (in Google Console)
-- [ ] Dev server is running: `npm run dev`
-- [ ] No errors in browser console
-- [ ] Browser cache cleared or hard refresh done
-- [ ] Google Identity Services API is enabled
-- [ ] OAuth 2.0 credential exists and is set to "Web application" type
+Checks:
+1. Browser storage is not blocked for your site.
+2. `persistSession` is enabled (it is in current codebase).
+3. Domain/protocol is consistent (`http://localhost:5173` in dev, HTTPS in prod).
+4. Browser extensions are not stripping storage/cookies.
 
 ---
 
 ## Debug Steps
 
-### Step 1: Check if ClientID is being read
-
-Open browser DevTools (F12):
-
-```javascript
-// Type in Console tab:
-console.log(import.meta.env.VITE_GOOGLE_CLIENT_ID);
-```
-
-Should show your Client ID (not undefined)
-
-### Step 2: Check for console errors
-
-Look in **Console** tab of DevTools for any red error messages
-
-### Step 3: Check Network tab
-
-1. Open DevTools > Network tab
-2. Try to login
-3. Look for requests to `oauth.google.com`
-4. Check the error response for details
-
-### Step 4: Check Application tab
-
-1. Open DevTools > Application tab
-2. Look for any cookies or storage related to Google
-3. Clear all site data: DevTools > Application > Storage > "Clear site data" button
+1. Open browser DevTools Console.
+2. Trigger sign-in and capture first auth error line.
+3. Inspect Network for calls to Supabase auth endpoints.
+4. Confirm redirect URL in request matches expected domain.
+5. Verify app removes OAuth error params from URL after handling.
 
 ---
 
-## Still Having Issues?
+## Recovery Steps
 
-Try the **nuclear option** - start completely fresh:
+1. Stop dev server.
+2. Clear Vite cache and restart:
 
 ```bash
-# 1. Stop dev server (Ctrl+C)
-
-# 2. Delete cache
 rm -rf node_modules/.vite
-
-# 3. Clear npm cache
-npm cache clean --force
-
-# 4. Reinstall dependencies just to be safe
-npm install
-
-# 5. Restart dev server
 npm run dev
 ```
 
-Then reload browser and try login again.
+3. Clear site data in browser for localhost/production domain.
+4. Retry sign-in.
 
 ---
 
-## If All Else Fails
+## Security Checklist
 
-Create a **brand new OAuth 2.0 credential:**
-
-1. Go to Google Cloud Console
-2. **APIs & Services** > **Credentials**
-3. Click the **DELETE** button on your current OAuth credential
-4. Click **+ CREATE CREDENTIALS** > **OAuth 2.0 Client ID**
-5. Choose **Web application**
-6. Name it: `PitchIQ Local Dev`
-7. Add authorized origins:
-   - `http://localhost:5173`
-8. Click **CREATE**
-9. Copy the new Client ID
-10. Update `.env.local` with the new ID
-11. Restart dev server
+- Keep redirect allowlists minimal.
+- Do not cache auth/token endpoints in service worker.
+- Keep production on HTTPS.
+- Do not store secrets in frontend env vars.
+- Revalidate configuration after domain changes.
 
 ---
 
-## Expected Behavior After Fix
+## Still blocked?
 
-1. ✅ Page loads without error message
-2. ✅ "Sign in with Google" button appears
-3. ✅ Click button → Google popup appears
-4. ✅ Sign in successfully
-5. ✅ Redirected to app and logged in
-
----
-
-## Need More Help?
-
-Check browser console for specific error messages and Google's official docs:
-
-- [Google Identity Documentation](https://developers.google.com/identity)
-- [OAuth 2.0 Configuration](https://developers.google.com/identity/protocols/oauth2)
-
-**Current Status:** ⚠️ Needs Google Console configuration
-**Action Required:** Add `http://localhost:5173` to Authorized JavaScript origins
+Collect and share:
+1. Exact error message from browser console/network.
+2. Current `VITE_SUPABASE_REDIRECT_URL` value (domain only, no secrets).
+3. Whether issue is local or production.
+4. Whether it fails only in installed PWA mode or also in normal browser tab.
