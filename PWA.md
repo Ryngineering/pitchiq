@@ -35,6 +35,33 @@ Important design choices for this conversion:
 - Update strategy: background check, new version activates on next reopen.
 - OAuth policy: localhost + production domain only.
 
+## 3.1 Quick Reference: PWA Files in This Repo
+
+Short description of the main PWA-related files:
+
+- [public/manifest.webmanifest](public/manifest.webmanifest)
+  - App identity for install prompts (name, icons, start URL, display mode, colors).
+- [public/sw.js](public/sw.js)
+  - Service worker logic (install, cache strategy, activate cleanup, fetch handling).
+- [src/main.jsx](src/main.jsx)
+  - Registers the service worker in production and checks for updates.
+- [index.html](index.html)
+  - Connects manifest and PWA metadata (theme color, Apple install tags, icons).
+- [src/App.jsx](src/App.jsx) and [src/App.css](src/App.css)
+  - User-facing offline awareness (online/offline listeners, toast/banner styles).
+- [public/pwa-192x192.png](public/pwa-192x192.png), [public/pwa-512x512.png](public/pwa-512x512.png), [public/pwa-192x192-maskable.png](public/pwa-192x192-maskable.png), [public/pwa-512x512-maskable.png](public/pwa-512x512-maskable.png)
+  - Install and launcher icons used by Android/Desktop/iOS surfaces.
+
+Short description of [vercel.json](vercel.json):
+
+- It is Vercel deployment configuration for edge behavior.
+- In this project it controls:
+  - Cache headers for PWA assets ([sw.js](public/sw.js), [manifest.webmanifest](public/manifest.webmanifest), and [public/team-logos](public/team-logos)).
+  - Security headers (CSP, X-Frame-Options, Referrer-Policy, and more).
+- Practical effect:
+  - Faster repeat loads through correct caching.
+  - Safer production defaults through response-header hardening.
+
 ## 4) File-by-File Changes
 
 ## 4.1 App metadata and install surface

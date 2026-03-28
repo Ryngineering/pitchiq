@@ -278,6 +278,9 @@ export function mapDbMatchToFrontend(row, teamLookup = {}) {
     t2s: row.away_score || "—",
     t2o: parseOvers(row.away_info) || "",
     t1p,
+    statistics: row.raw?.statistics ?? [],
+    homeInfoRaw: row.home_info ?? null,
+    awayInfoRaw: row.away_info ?? null,
   };
 }
 
