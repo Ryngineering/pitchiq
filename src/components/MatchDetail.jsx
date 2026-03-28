@@ -7,17 +7,6 @@ export default function MatchDetail({ match, prediction, onPredict, onBack }) {
   const [selected, setSelected] = useState(null);
   const [changing, setChanging] = useState(false);
 
-  const toRgba = (hex, alpha, fallback = `rgba(255,255,255,${alpha})`) => {
-    if (!hex || typeof hex !== "string") return fallback;
-    const cleanHex = hex.trim().replace("#", "");
-    if (!/^[\da-fA-F]{6}$/.test(cleanHex)) return fallback;
-    const intVal = Number.parseInt(cleanHex, 16);
-    const r = (intVal >> 16) & 255;
-    const g = (intVal >> 8) & 255;
-    const b = intVal & 255;
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-  };
-
   const t1 = match.t1Meta || {
     s: match.t1 || "TBD",
     name: match.t1Name || "Unknown Team",
@@ -69,14 +58,9 @@ export default function MatchDetail({ match, prediction, onPredict, onBack }) {
             {isDone && <span className="badge-done">FINAL</span>}
           </div>
 
-          <div className="big-teams big-teams-split">
-            <div
-              className="big-team big-team-side"
-              style={{
-                background: `linear-gradient(90deg, ${toRgba(t1.bg, 0.52, "rgba(255,255,255,0.52)")} 0%, ${toRgba(t1.bg, 0.18, "rgba(255,255,255,0.18)")} 100%)`,
-              }}
-            >
-              <div className="big-logo" style={{ background: "transparent" }}>
+          <div className="big-teams">
+            <div className="big-team">
+              <div className="big-logo" style={{ background: t1.bg }}>
                 {match.t1Logo ? (
                   <img
                     src={match.t1Logo}
@@ -91,7 +75,6 @@ export default function MatchDetail({ match, prediction, onPredict, onBack }) {
                   <span style={{ fontSize: 40 }}>{t1.em}</span>
                 )}
               </div>
-              <span className="big-win-pct">{match.t1p}% Win Probability</span>
               <span className="big-name">{t1.s}</span>
               {match.t1s && <span className="big-score">{match.t1s}</span>}
               {match.t1o && (
@@ -100,16 +83,21 @@ export default function MatchDetail({ match, prediction, onPredict, onBack }) {
                 </span>
               )}
             </div>
-
-            <div className="big-mid-divider" />
-
-            <div
-              className="big-team big-team-side"
-              style={{
-                background: `linear-gradient(270deg, ${toRgba(t2.bg, 0.52, "rgba(255,255,255,0.52)")} 0%, ${toRgba(t2.bg, 0.18, "rgba(255,255,255,0.18)")} 100%)`,
-              }}
-            >
-              <div className="big-logo" style={{ background: "transparent" }}>
+            <div className="big-vs">
+              <span className="big-vs-text">VS</span>
+              <span
+                style={{
+                  fontSize: 10,
+                  color: "var(--muted)",
+                  fontWeight: 700,
+                  textAlign: "center",
+                }}
+              >
+                {match.venue?.split(",").slice(-1)[0]?.trim()}
+              </span>
+            </div>
+            <div className="big-team">
+              <div className="big-logo" style={{ background: t2.bg }}>
                 {match.t2Logo ? (
                   <img
                     src={match.t2Logo}
@@ -124,7 +112,6 @@ export default function MatchDetail({ match, prediction, onPredict, onBack }) {
                   <span style={{ fontSize: 40 }}>{t2.em}</span>
                 )}
               </div>
-              <span className="big-win-pct">{t2p}% Win Probability</span>
               <span className="big-name">{t2.s}</span>
               {match.t2s && <span className="big-score">{match.t2s}</span>}
               {match.t2o && (

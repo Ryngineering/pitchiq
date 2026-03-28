@@ -1,5 +1,6 @@
 import React from "react";
 import { calcPts } from "../data";
+import ProbBar from "./ProbBar";
 
 export default function MatchCard({
   match,
@@ -8,17 +9,6 @@ export default function MatchCard({
   displayLabel,
   pickCounts,
 }) {
-  const toRgba = (hex, alpha, fallback = `rgba(255,255,255,${alpha})`) => {
-    if (!hex || typeof hex !== "string") return fallback;
-    const cleanHex = hex.trim().replace("#", "");
-    if (!/^[\da-fA-F]{6}$/.test(cleanHex)) return fallback;
-    const intVal = Number.parseInt(cleanHex, 16);
-    const r = (intVal >> 16) & 255;
-    const g = (intVal >> 8) & 255;
-    const b = intVal & 255;
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-  };
-
   const t1 = match.t1Meta || {
     s: match.t1 || "TBD",
     name: match.t1Name || "Unknown Team",
@@ -41,14 +31,13 @@ export default function MatchCard({
   const pred = prediction;
   const hasPrediction = Boolean(pred) && !isDone;
   const needsPrediction = !pred && !isDone;
-  const t1p = Math.min(100, Math.max(0, Number(match.t1p ?? 50)));
 
   const predWon = isDone && pred && match.winner === pred.team;
   const predLost = isDone && pred && match.winner && match.winner !== pred.team;
-  const t2p = 100 - t1p;
+  const t2p = 100 - match.t1p;
   const pointsPotential = hasPrediction
     ? (pred.pts ?? calcPts(pred.prob))
-    : Math.max(calcPts(t1p), calcPts(t2p));
+    : Math.max(calcPts(match.t1p), calcPts(t2p));
 
   let pickedSide = null;
   if (pred?.team) {
@@ -97,6 +86,8 @@ export default function MatchCard({
             <span className="badge-upcoming">UPCOMING</span>
           )}
           {isDone && <span className="badge-done">FINAL</span>}
+          {needsPrediction && <span className="badge-cta">PICK NOW</span>}
+          {hasPrediction && <span className="badge-picked">✓ PICKED</span>}
           {!isDone && (
             <span className="mc-pts-pill">
               {hasPrediction
@@ -107,17 +98,9 @@ export default function MatchCard({
         </div>
       </div>
 
-      <div className="mc-body mc-body-split">
-        <div
-          className={`mc-team mc-side ${pickedSide === "t1" ? "picked-team" : ""}`}
-          style={{
-            background: `linear-gradient(90deg, ${toRgba(t1.bg, 0.52, "rgba(255,255,255,0.52)")} 0%, ${toRgba(t1.bg, 0.18, "rgba(255,255,255,0.18)")} 100%)`,
-          }}
-        >
-          <div
-            className="mc-logo mc-logo-lg"
-            style={{ background: "transparent" }}
-          >
+      <div className="mc-body">
+        <div className={`mc-team ${pickedSide === "t1" ? "picked-team" : ""}`}>
+          <div className="mc-logo" style={{ background: t1.bg }}>
             {t1.logo ? (
               <img
                 src={t1.logo}
@@ -128,7 +111,6 @@ export default function MatchCard({
               <span>{t1.em}</span>
             )}
           </div>
-          <span className="mc-win-pct">{t1p}% Win Probability</span>
           <span
             className="mc-short"
             style={{ color: t1.fg === "#FFFFFF" ? "#fff" : t1.bg }}
@@ -138,18 +120,27 @@ export default function MatchCard({
           {match.t1s && <span className="mc-score">{match.t1s}</span>}
         </div>
 
-        <div className="mc-mid-divider" />
+        <div className="mc-mid">
+          <span className="mc-vs">VS</span>
+          <span className="mc-venue">{match.venue?.split(",")[0]}</span>
+          {isLive && match.currentOver && (
+            <span
+              style={{ fontSize: 10, color: "var(--green)", fontWeight: 800 }}
+            >
+              Ov {match.currentOver}
+            </span>
+          )}
+          {match.status === "upcoming" && (
+            <span
+              style={{ fontSize: 10, color: "var(--muted)", fontWeight: 700 }}
+            >
+              {match.date}
+            </span>
+          )}
+        </div>
 
-        <div
-          className={`mc-team mc-side ${pickedSide === "t2" ? "picked-team" : ""}`}
-          style={{
-            background: `linear-gradient(270deg, ${toRgba(t2.bg, 0.52, "rgba(255,255,255,0.52)")} 0%, ${toRgba(t2.bg, 0.18, "rgba(255,255,255,0.18)")} 100%)`,
-          }}
-        >
-          <div
-            className="mc-logo mc-logo-lg"
-            style={{ background: "transparent" }}
-          >
+        <div className={`mc-team ${pickedSide === "t2" ? "picked-team" : ""}`}>
+          <div className="mc-logo" style={{ background: t2.bg }}>
             {t2.logo ? (
               <img
                 src={t2.logo}
@@ -160,7 +151,6 @@ export default function MatchCard({
               <span>{t2.em}</span>
             )}
           </div>
-          <span className="mc-win-pct">{t2p}% Win Probability</span>
           <span
             className="mc-short"
             style={{ color: t2.fg === "#FFFFFF" ? "#fff" : t2.bg }}
@@ -171,11 +161,21 @@ export default function MatchCard({
         </div>
       </div>
 
+      {!isDone && (
+        <ProbBar
+          t1p={match.t1p}
+          t1Label={t1.s}
+          t2Label={t2.s}
+          t1Color={t1.bg}
+          t2Color={t2.bg}
+        />
+      )}
+
       {pred && !isDone && (
         <div className="pred-strip pred-strip-picked">
           <div className="pred-dot pred-dot-picked" />
           <span className="pred-text">
-            My pick: <strong>{pred.team || "TBD"}</strong>
+            Picked <strong>{pred.team || "TBD"}</strong> to win
           </span>
           <div className="mc-crowd">
             <span className="mc-crowd-icon">👥</span>
@@ -195,7 +195,7 @@ export default function MatchCard({
         <div className="winner-strip">
           <span className="winner-text">
             {match.winner ? `${match.winner} won` : "Match drawn"}
-            {pred ? ` · You chose ${pred.team || "TBD"}` : ""}
+            {pred ? ` · You picked ${pred.team || "TBD"}` : ""}
           </span>
           {predWon && <span className="winner-pts">+{pred.pts} pts ✓</span>}
           {predLost && <span className="loser-pts">—</span>}
