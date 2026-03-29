@@ -256,7 +256,7 @@ export default function ProfileScreen({
           </div>
         </div>
 
-        <div className="section" style={{ marginBottom: 12 }}>
+        <div className="section profile-section" style={{ marginBottom: 12 }}>
           <div className="section-title">📋 Prediction History</div>
         </div>
 
@@ -305,7 +305,10 @@ export default function ProfileScreen({
 
         {user.isAdmin && (
           <>
-            <div className="section" style={{ marginBottom: 12 }}>
+            <div
+              className="section profile-section"
+              style={{ marginBottom: 12 }}
+            >
               <div className="section-title">🛡️ Pending Approvals</div>
             </div>
 

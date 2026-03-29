@@ -558,7 +558,7 @@ export default function MatchDetail({
 
         {/* ═══════════════ PREDICT TAB ═══════════════ */}
         {activeTab === "predict" && (
-          <>
+          <div className="match-detail-content">
             <div className="prob-section" style={{ margin: "0 16px 14px" }}>
               <div className="prob-section-label">WIN PROBABILITY</div>
               <ProbBar
@@ -900,12 +900,12 @@ export default function MatchDetail({
                 )}
               </>
             )}
-          </>
+          </div>
         )}
 
         {/* ═══════════════ POINTS TAB ═══════════════ */}
         {activeTab === "points" && (
-          <>
+          <div className="match-detail-content">
             <div className="scoring-info">
               <div className="si-title">⚡ HOW POINTS WORK</div>
               <div className="si-row">
@@ -935,7 +935,7 @@ export default function MatchDetail({
               Backing the underdog pays more. Points are awarded inverse to win
               probability — the bigger the upset, the bigger the reward.
             </div>
-          </>
+          </div>
         )}
       </div>
 

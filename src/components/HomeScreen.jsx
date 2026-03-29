@@ -98,7 +98,7 @@ export default function HomeScreen({
 
       <div className="screen-pad">
         {showLive && live.length > 0 && (
-          <div className="section">
+          <div className="section home-section">
             <div className="section-title">🟢 Live Now</div>
             {live.map((m) => (
               <MatchCard
@@ -114,7 +114,7 @@ export default function HomeScreen({
         )}
 
         {showUpcoming && upcoming.length > 0 && (
-          <div className="section">
+          <div className="section home-section">
             <div className="section-title">⏳ Upcoming</div>
             {upcoming.map((m) => (
               <MatchCard
@@ -130,7 +130,7 @@ export default function HomeScreen({
         )}
 
         {showDone && done.length > 0 && (
-          <div className="section">
+          <div className="section home-section">
             <div className="section-title">✅ Completed</div>
             {done.map((m) => (
               <MatchCard
