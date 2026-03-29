@@ -443,6 +443,7 @@ function App() {
       {screen === "match" && selectedMatch && (
         <MatchDetail
           match={selectedMatch}
+          currentUserId={user.id}
           prediction={predictions[selectedId]}
           onPredict={handlePredict}
           aiHelpEnabled={AI_HELP_ENABLED}

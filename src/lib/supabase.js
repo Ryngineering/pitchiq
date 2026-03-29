@@ -743,20 +743,24 @@ export async function fetchMatchPickCounts(matchIds) {
 export async function checkAiHelpUsed(userId, matchId) {
   if (!supabase || !userId || !matchId) return false;
 
-  const { data, error } = await supabase
-    .from("user_ai_help_usage")
-    .select("id")
-    .eq("user_id", userId)
-    .eq("match_id", matchId)
-    .limit(1)
-    .single();
+  // Support both legacy and current table names.
+  const usageTables = ["ai_help_usage", "user_ai_help_usage"];
 
-  if (error) {
-    // Table may not exist or no row found — both are valid, assume not used
-    return false;
+  for (const tableName of usageTables) {
+    const { data, error } = await supabase
+      .from(tableName)
+      .select("id")
+      .eq("user_id", userId)
+      .eq("match_id", matchId)
+      .limit(1)
+      .maybeSingle();
+
+    if (!error) {
+      return Boolean(data?.id);
+    }
   }
 
-  return Boolean(data?.id);
+  return false;
 }
 
 /**

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { calcPts } from "../data";
 import ProbBar from "./ProbBar";
+import { checkAiHelpUsed } from "../lib/supabase";
 import {
   ChevronLeft,
   RefreshCw,
@@ -183,6 +184,7 @@ function extractLiveStats(match) {
 
 export default function MatchDetail({
   match,
+  currentUserId,
   prediction,
   onPredict,
   onBack,
@@ -245,6 +247,12 @@ export default function MatchDetail({
   const aiHelpUsed = Boolean(
     match.aiHelpUsed || aiHelpPayload || aiAlreadyUsedFromDb,
   );
+  const shouldShowAiFab =
+    !isDone &&
+    !aiHelpUsed &&
+    !aiResultOpen &&
+    !aiError &&
+    !(currentUserId && aiCheckingDb);
 
   const liveStats = useMemo(
     () => (isLive ? extractLiveStats(match) : null),
@@ -269,13 +277,30 @@ export default function MatchDetail({
     setAiCheckingDb(true);
     setAiAlreadyUsedFromDb(false);
 
-    // This is handled by requestAiMatchHelp throwing a 409 conflict error,
-    // and also by checking the database on initial load.
-    // For now, we rely on the backend 409 response and the aiUsageLocked state.
-    // In a future update, you can add a DB query here to check user_ai_help_usage.
+    if (!currentUserId || !match?.id) {
+      setAiCheckingDb(false);
+      return;
+    }
 
-    setAiCheckingDb(false);
-  }, [match.id]);
+    let cancelled = false;
+
+    const loadUsage = async () => {
+      const hasUsed = await checkAiHelpUsed(currentUserId, match.id);
+
+      if (cancelled) {
+        return;
+      }
+
+      setAiAlreadyUsedFromDb(hasUsed);
+      setAiCheckingDb(false);
+    };
+
+    void loadUsage();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentUserId, match?.id]);
 
   const handleConfirm = () => {
     if (!selected) return;
@@ -339,7 +364,7 @@ export default function MatchDetail({
       setTimeout(() => setAiError(null), 3000);
       return;
     }
-    if (!aiHelpEnabled || isDone || aiLoading) return;
+    if (!aiHelpEnabled || isDone || aiLoading || aiCheckingDb) return;
 
     setAiLoading(true);
     setAiError(null);
@@ -836,7 +861,7 @@ export default function MatchDetail({
       </div>
 
       {/* ── Floating AI Bot FAB ── */}
-      {!isDone && !aiHelpUsed && (
+      {shouldShowAiFab && (
         <div className="ai-fab-stack">
           <button
             className={`ai-fab ${aiLoading ? "spinning" : ""}`}
