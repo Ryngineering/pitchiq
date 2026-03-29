@@ -836,10 +836,10 @@ export default function MatchDetail({
       </div>
 
       {/* ── Floating AI Bot FAB ── */}
-      {!isDone && (
-        <>
+      {!isDone && !aiHelpUsed && (
+        <div className="ai-fab-stack">
           <button
-            className={`ai-fab ${aiLoading ? "spinning" : ""} ${aiHelpUsed ? "used" : ""}`}
+            className={`ai-fab ${aiLoading ? "spinning" : ""}`}
             onClick={handleAiFabClick}
             aria-label="AI Prediction"
             disabled={aiLoading}
@@ -864,7 +864,7 @@ export default function MatchDetail({
               <span>{aiError}</span>
             </div>
           )}
-        </>
+        </div>
       )}
 
       {/* ── Folding AI Result Panel ── */}

@@ -627,13 +627,21 @@ body { font-family: 'Nunito', sans-serif; color: var(--text); }
 }
 
 /* ── AI FLOATING FAB ── */
-.ai-fab {
+.ai-fab-stack {
   position: fixed;
-  bottom: 96px;
-  right: 20px;
+  bottom: 88px;
+  right: max(16px, calc((100vw - min(1200px, 100vw)) / 2 + 16px));
   z-index: 30;
-  width: 58px;
-  height: 58px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.ai-fab {
+  position: relative;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
   border: none;
   background: linear-gradient(145deg, #0d1a3e, #162040);
@@ -649,9 +657,9 @@ body { font-family: 'Nunito', sans-serif; color: var(--text); }
 /* Rotating halo ring */
 .ai-fab-halo {
   position: absolute;
-  inset: -5px;
+  inset: -4px;
   border-radius: 50%;
-  border: 2.5px solid transparent;
+  border: 2px solid transparent;
   border-top-color: #7ad3ff;
   border-right-color: #6a88ff;
   animation: aiFabHaloSpin 2.4s linear infinite;
@@ -662,7 +670,7 @@ body { font-family: 'Nunito', sans-serif; color: var(--text); }
 }
 
 .ai-fab-icon {
-  font-size: 28px;
+  font-size: 24px;
   line-height: 1;
   transition: transform 0.5s cubic-bezier(0.4,0,0.2,1);
 }
@@ -693,20 +701,18 @@ body { font-family: 'Nunito', sans-serif; color: var(--text); }
 
 /* Loading quip below fab */
 .ai-fab-loading-quip {
-  position: fixed;
-  bottom: 80px;
-  right: 14px;
-  z-index: 29;
+  position: relative;
   background: rgba(13,26,62,0.92);
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(122,210,255,0.25);
   border-radius: 12px;
-  padding: 8px 14px;
-  font-size: 12px;
+  padding: 7px 11px;
+  font-size: 11px;
   font-weight: 800;
   color: #d6e2ff;
-  white-space: nowrap;
+  max-width: 220px;
+  text-align: right;
   box-shadow: 0 6px 24px rgba(0,0,0,0.4);
   animation: aiFabQuipIn 0.25s ease;
 }
@@ -717,10 +723,7 @@ body { font-family: 'Nunito', sans-serif; color: var(--text); }
 
 /* Error toast near fab */
 .ai-fab-error-toast {
-  position: fixed;
-  bottom: 80px;
-  right: 14px;
-  z-index: 29;
+  position: relative;
   background: rgba(40,14,14,0.92);
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
@@ -735,6 +738,7 @@ body { font-family: 'Nunito', sans-serif; color: var(--text); }
   color: #ffb9b9;
   box-shadow: 0 6px 24px rgba(0,0,0,0.4);
   animation: aiFabQuipIn 0.25s ease;
+  max-width: 250px;
 }
 
 /* ── AI Result Overlay / Folding Panel ── */
