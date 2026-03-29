@@ -1240,31 +1240,48 @@ body { font-family: 'Nunito', sans-serif; color: var(--text); }
 }
 .settings-item:hover { background: rgba(255,71,87,0.08); }
 
-/* Match detail floating back arrow */
-.side-back-btn {
-  position: fixed;
-  left: max(8px, calc((100vw - min(430px, 100vw)) / 2 + 8px));
-  top: 50%;
-  transform: translateY(-50%);
-  width: 42px;
-  height: 42px;
-  border-radius: 999px;
-  border: 1px solid var(--glass-border);
-  background: rgba(15, 22, 40, 0.88);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
-  color: var(--text);
+/* Match detail sticky header back button */
+.md-back-btn {
+  background: none;
+  border: none;
+  color: var(--sub);
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  z-index: 26;
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.4);
+  padding: 4px 6px;
+  border-radius: 8px;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+.md-back-btn:hover { background: rgba(255,255,255,0.07); color: var(--text); }
+.md-back-btn:active { opacity: 0.7; }
+
+/* Match detail header-right cluster */
+.md-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.side-back-btn:active {
-  transform: translateY(-50%) scale(0.95);
+/* AI already-used chip shown beside settings */
+.ai-used-chip {
+  font-size: 10px;
+  font-weight: 800;
+  color: rgba(122, 210, 255, 0.75);
+  background: rgba(122, 210, 255, 0.08);
+  border: 1px solid rgba(122, 210, 255, 0.2);
+  border-radius: 20px;
+  padding: 3px 9px;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
 }
+
+/* Win-probability block inside predict tab (replaces inline margin) */
+.predict-prob { margin: 0 16px 14px; }
+
+/* OR SWITCH YOUR PICK wrapper (replaces inline padding) */
+.pred-switch-wrap { padding: 0 16px; margin-bottom: 14px; }
 
 /* No-predictions CTA */
 .profile-cta-btn {
@@ -1475,11 +1492,17 @@ body { font-family: 'Nunito', sans-serif; color: var(--text); }
   .curr-pred-card,
   .scoring-info,
   .result-card,
-  .user-result-card {
+  .user-result-card,
+  .predict-prob,
+  .pred-switch-wrap {
     max-width: 760px;
     margin-left: auto;
     margin-right: auto;
   }
+
+  /* Remove mobile lateral margin/padding so these align with the card above */
+  .predict-prob { margin-left: auto; margin-right: auto; }
+  .pred-switch-wrap { padding-left: 0; padding-right: 0; }
 
   /* ─── LEADERBOARD: centered ─── */
   .lb-header {
@@ -1633,6 +1656,6 @@ body { font-family: 'Nunito', sans-serif; color: var(--text); }
 
 @media (min-width: 900px) {
   .side-back-btn {
-    left: max(18px, calc((100vw - min(1200px, 100vw)) / 2 + 18px));
+    display: none;
   }
 }

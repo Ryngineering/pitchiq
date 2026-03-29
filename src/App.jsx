@@ -449,6 +449,7 @@ function App() {
           aiHelpEnabled={AI_HELP_ENABLED}
           onRequestAiHelp={handleRequestAiHelp}
           onBack={() => setScreen("home")}
+          onSettings={() => setScreen("profile")}
         />
       )}
       {screen === "leaderboard" && (

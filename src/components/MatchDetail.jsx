@@ -9,6 +9,7 @@ import {
   Clock,
   X,
   ShieldAlert,
+  Settings,
 } from "lucide-react";
 
 const AI_LOADING_QUIPS = [
@@ -188,6 +189,7 @@ export default function MatchDetail({
   prediction,
   onPredict,
   onBack,
+  onSettings,
   aiHelpEnabled: aiHelpEnabledProp,
   onRequestAiHelp,
 }) {
@@ -396,13 +398,28 @@ export default function MatchDetail({
 
   return (
     <div className="screen">
-      <button
-        className="side-back-btn"
-        onClick={onBack}
-        aria-label="Back to home"
-      >
-        <ChevronLeft size={20} />
-      </button>
+      <div className="header">
+        <button
+          className="md-back-btn"
+          onClick={onBack}
+          aria-label="Back to matches"
+        >
+          <ChevronLeft size={18} />
+        </button>
+        <span className="header-logo">🏏 PITCHIQ</span>
+        <div className="md-header-right">
+          {aiHelpUsed && !isDone && !aiResultOpen && (
+            <span className="ai-used-chip">🤖 AI used</span>
+          )}
+          <button
+            className="settings-btn"
+            aria-label="Settings"
+            onClick={onSettings}
+          >
+            <Settings size={16} />
+          </button>
+        </div>
+      </div>
 
       <div className="screen-pad">
         <div className="match-hero">
@@ -601,7 +618,7 @@ export default function MatchDetail({
         {/* ═══════════════ PREDICT TAB ═══════════════ */}
         {activeTab === "predict" && (
           <div className="match-detail-content">
-            <div className="prob-section" style={{ margin: "0 16px 14px" }}>
+            <div className="prob-section predict-prob">
               <div className="prob-section-label">WIN PROBABILITY</div>
               <ProbBar
                 t1p={match.t1p}
@@ -706,12 +723,7 @@ export default function MatchDetail({
                 )}
 
                 {hasPred && (
-                  <div
-                    style={{
-                      padding: "0 16px",
-                      marginBottom: 14,
-                    }}
-                  >
+                  <div className="pred-switch-wrap">
                     <div
                       style={{
                         fontSize: 10,
