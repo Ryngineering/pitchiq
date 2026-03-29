@@ -598,6 +598,7 @@ export async function requestAiMatchHelp({ matchId, mode }) {
     };
   }
 
+  const allowAnonFallback = import.meta.env.VITE_AI_HELP_ALLOW_ANON === "true";
   const requestBody = { matchId, mode };
 
   const {
@@ -607,12 +608,15 @@ export async function requestAiMatchHelp({ matchId, mode }) {
   const invokeWithToken = async (token) =>
     supabase.functions.invoke("ai-help", {
       body: requestBody,
-      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      headers: {
+        apikey: supabasePublishableKey,
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
     });
 
   let { data, error } = await invokeWithToken(session?.access_token);
 
-  const status = error?.context?.status ?? error?.status;
+  let status = error?.context?.status ?? error?.status;
   if (status === 401) {
     const { data: refreshed, error: refreshError } =
       await supabase.auth.refreshSession();
@@ -621,7 +625,16 @@ export async function requestAiMatchHelp({ matchId, mode }) {
       const retry = await invokeWithToken(refreshed.session.access_token);
       data = retry.data;
       error = retry.error;
+      status = error?.context?.status ?? error?.status;
     }
+  }
+
+  // Fallback to anon key if JWT fails and anon fallback is enabled
+  if (status === 401 && allowAnonFallback) {
+    const anonRetry = await invokeWithToken(null);
+    data = anonRetry.data;
+    error = anonRetry.error;
+    status = error?.context?.status ?? error?.status;
   }
 
   return {
@@ -722,6 +735,47 @@ export async function fetchMatchPickCounts(matchIds) {
 }
 
 // ─── LEADERBOARD ──────────────────────────────────────────────────────────────
+
+/**
+ * Check if the current user has already used AI help for a specific match.
+ * Queries the user_ai_help_usage table to enforce one-time-use per match.
+ */
+export async function checkAiHelpUsed(userId, matchId) {
+  if (!supabase || !userId || !matchId) return false;
+
+  const { data, error } = await supabase
+    .from("user_ai_help_usage")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("match_id", matchId)
+    .limit(1)
+    .single();
+
+  if (error) {
+    // Table may not exist or no row found — both are valid, assume not used
+    return false;
+  }
+
+  return Boolean(data?.id);
+}
+
+/**
+ * Record that the user has used AI help for a match.
+ * Called after successful AI help request.
+ */
+export async function recordAiHelpUsage(userId, matchId) {
+  if (!supabase || !userId || !matchId) return { data: null, error: null };
+
+  return supabase
+    .from("user_ai_help_usage")
+    .insert({
+      user_id: userId,
+      match_id: matchId,
+      used_at: new Date().toISOString(),
+    })
+    .select()
+    .single();
+}
 
 /**
  * Fetch the full leaderboard from the DB view, ordered by rank.

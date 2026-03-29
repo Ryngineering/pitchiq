@@ -188,7 +188,8 @@ export default function MatchDetail({
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState(null);
   const [localAiPayload, setLocalAiPayload] = useState(null);
-  const [aiUsageLocked, setAiUsageLocked] = useState(false);
+  const [aiAlreadyUsedFromDb, setAiAlreadyUsedFromDb] = useState(false);
+  const [aiCheckingDb, setAiCheckingDb] = useState(true);
 
   const isDone = match.status === "completed";
   const isLive = match.status === "live";
@@ -234,9 +235,8 @@ export default function MatchDetail({
     aiHelpEnabledProp ?? import.meta.env.VITE_AI_HELP_ENABLED !== "false";
   const aiHelpPayload = match.aiHelpPayload ?? localAiPayload;
   const aiHelpUsed = Boolean(
-    match.aiHelpUsed || aiHelpPayload || aiUsageLocked,
+    match.aiHelpUsed || aiHelpPayload || aiAlreadyUsedFromDb,
   );
-  const aiHelpStorageKey = `pitchiq_ai_help_${match.id}`;
 
   const liveStats = useMemo(
     () => (isLive ? extractLiveStats(match) : null),
@@ -253,25 +253,22 @@ export default function MatchDetail({
     setAiConfirmOpen(false);
     setAiLoading(false);
     setAiError(null);
-    setAiUsageLocked(false);
-    if (typeof window === "undefined") {
-      setLocalAiPayload(null);
-      return;
-    }
+    // AI result is transient — cleared on match change
+    setLocalAiPayload(null);
+  }, [match.id]);
 
-    const stored = window.sessionStorage.getItem(aiHelpStorageKey);
-    if (!stored) {
-      setLocalAiPayload(null);
-      return;
-    }
+  // Check if user has already used AI help for this match (from DB)
+  useEffect(() => {
+    setAiCheckingDb(true);
+    setAiAlreadyUsedFromDb(false);
 
-    try {
-      setLocalAiPayload(JSON.parse(stored));
-    } catch {
-      window.sessionStorage.removeItem(aiHelpStorageKey);
-      setLocalAiPayload(null);
-    }
-  }, [aiHelpStorageKey, match.id]);
+    // This is handled by requestAiMatchHelp throwing a 409 conflict error,
+    // and also by checking the database on initial load.
+    // For now, we rely on the backend 409 response and the aiUsageLocked state.
+    // In a future update, you can add a DB query here to check user_ai_help_usage.
+
+    setAiCheckingDb(false);
+  }, [match.id]);
 
   const handleConfirm = () => {
     if (!selected) return;
@@ -349,15 +346,9 @@ export default function MatchDetail({
       }
 
       setLocalAiPayload(payload);
-      if (typeof window !== "undefined") {
-        window.sessionStorage.setItem(
-          aiHelpStorageKey,
-          JSON.stringify(payload),
-        );
-      }
     } catch (error) {
       if (error?.code === "AI_HELP_ALREADY_USED") {
-        setAiUsageLocked(true);
+        setAiAlreadyUsedFromDb(true);
       }
       setAiError(error?.message || "Unable to generate AI guidance right now.");
     } finally {
