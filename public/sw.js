@@ -51,7 +51,13 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
 
   if (isAuthOrLiveDataRequest(url)) {
-    event.respondWith(fetch(request));
+    event.respondWith(
+      fetch(request).catch(async () => {
+        // Avoid surfacing uncaught promise errors for transient cross-origin failures.
+        const cached = await caches.match(request);
+        return cached || new Response(null, { status: 504, statusText: "Gateway Timeout" });
+      }),
+    );
     return;
   }
 

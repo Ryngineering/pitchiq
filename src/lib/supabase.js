@@ -598,12 +598,31 @@ export async function requestAiMatchHelp({ matchId, mode }) {
     };
   }
 
-  const { data, error } = await supabase.functions.invoke("ai-help", {
-    body: {
-      matchId,
-      mode,
-    },
-  });
+  const requestBody = { matchId, mode };
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  const invokeWithToken = async (token) =>
+    supabase.functions.invoke("ai-help", {
+      body: requestBody,
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+
+  let { data, error } = await invokeWithToken(session?.access_token);
+
+  const status = error?.context?.status ?? error?.status;
+  if (status === 401) {
+    const { data: refreshed, error: refreshError } =
+      await supabase.auth.refreshSession();
+
+    if (!refreshError && refreshed?.session?.access_token) {
+      const retry = await invokeWithToken(refreshed.session.access_token);
+      data = retry.data;
+      error = retry.error;
+    }
+  }
 
   return {
     data: data ?? null,

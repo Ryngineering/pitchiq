@@ -222,7 +222,7 @@ function App() {
       const { data, error } = await requestAiMatchHelp({ matchId, mode });
 
       if (error) {
-        const status = error?.context?.status;
+        const status = error?.context?.status ?? error?.status;
         if (status === 409) {
           showToast("AI Help already used for this match.", "🧠");
           const alreadyUsedError = new Error(
@@ -230,6 +230,13 @@ function App() {
           );
           alreadyUsedError.code = "AI_HELP_ALREADY_USED";
           throw alreadyUsedError;
+        }
+
+        if (status === 401) {
+          showToast("Session expired. Please sign in again.", "🔐");
+          const authError = new Error("Session expired. Please sign in again.");
+          authError.code = "AI_HELP_UNAUTHORIZED";
+          throw authError;
         }
 
         showToast("AI Coach is unavailable right now.", "⚠️");
