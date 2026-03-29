@@ -8,12 +8,17 @@ import LeaderboardScreen from "./components/LeaderboardScreen";
 import ProfileScreen from "./components/ProfileScreen";
 import MatchDetail from "./components/MatchDetail";
 import BottomNav from "./components/BottomNav";
-import { hasSupabaseConfig, upsertPrediction } from "./lib/supabase";
+import {
+  hasSupabaseConfig,
+  requestAiMatchHelp,
+  upsertPrediction,
+} from "./lib/supabase";
 import usePitchData from "./hooks/usePitchData";
 import useSupabaseAuth from "./hooks/useSupabaseAuth";
 import "./App.css";
 
 const INACTIVITY_SIGN_OUT_MS = 30 * 60 * 1000;
+const AI_HELP_ENABLED = import.meta.env.VITE_AI_HELP_ENABLED !== "false";
 
 function App() {
   const [screen, setScreen] = useState("home");
@@ -210,6 +215,73 @@ function App() {
     }
   }, [refreshApprovalStatus, showToast]);
 
+  const handleRequestAiHelp = useCallback(
+    async ({ matchId, mode }) => {
+      const activeMatch = matches.find((m) => m.id === matchId);
+
+      const { data, error } = await requestAiMatchHelp({ matchId, mode });
+
+      if (error) {
+        const status = error?.context?.status;
+        if (status === 409) {
+          showToast("AI Help already used for this match.", "🧠");
+          const alreadyUsedError = new Error(
+            "AI Help already used for this match.",
+          );
+          alreadyUsedError.code = "AI_HELP_ALREADY_USED";
+          throw alreadyUsedError;
+        }
+
+        showToast("AI Coach is unavailable right now.", "⚠️");
+        throw new Error(error.message || "Unable to fetch AI guidance.");
+      }
+
+      const raw = data?.payload ?? data ?? {};
+      const team1Prob = Number(activeMatch?.t1p ?? 50);
+      const recommendTeam1 = team1Prob >= 50;
+      const fallbackTeam = recommendTeam1
+        ? {
+            id: activeMatch?.t1TeamId,
+            abbreviation: activeMatch?.t1,
+            name: activeMatch?.t1Name,
+          }
+        : {
+            id: activeMatch?.t2TeamId,
+            abbreviation: activeMatch?.t2,
+            name: activeMatch?.t2Name,
+          };
+
+      const normalized = {
+        mode,
+        confidence: Number(
+          raw.confidence ?? (recommendTeam1 ? team1Prob : 100 - team1Prob),
+        ),
+        headline: raw.headline || raw.summary || "AI guidance is ready",
+        recommendedTeam:
+          raw.recommendedTeam || raw.recommended_team || fallbackTeam,
+        insights: Array.isArray(raw.insights)
+          ? raw.insights
+          : Array.isArray(raw.bullets)
+            ? raw.bullets
+            : [],
+        riskWarning:
+          raw.riskWarning ||
+          raw.risk_warning ||
+          "Cricket momentum can shift rapidly in a short span.",
+        invalidationConditions: Array.isArray(raw.invalidationConditions)
+          ? raw.invalidationConditions
+          : Array.isArray(raw.invalidation_conditions)
+            ? raw.invalidation_conditions
+            : [],
+        sources: Array.isArray(raw.sources) ? raw.sources : [],
+      };
+
+      showToast("AI Coach insights are ready.", "🧠");
+      return normalized;
+    },
+    [matches, showToast],
+  );
+
   const selectedMatch = matches.find((m) => m.id === selectedId);
 
   if (!hasSupabaseConfig) {
@@ -252,7 +324,9 @@ function App() {
     return (
       <div className="app">
         {isOffline && (
-          <div className="offline-banner">Offline mode: live data may be stale.</div>
+          <div className="offline-banner">
+            Offline mode: live data may be stale.
+          </div>
         )}
         <div className="login-screen">
           <div className="login-logo-wrap">
@@ -269,7 +343,9 @@ function App() {
     return (
       <>
         {isOffline && (
-          <div className="offline-banner">Offline mode: sign-in requires internet.</div>
+          <div className="offline-banner">
+            Offline mode: sign-in requires internet.
+          </div>
         )}
         <LoginScreen onLogin={login} />
       </>
@@ -280,7 +356,9 @@ function App() {
     return (
       <div className="app">
         {isOffline && (
-          <div className="offline-banner">Offline mode: approval checks require internet.</div>
+          <div className="offline-banner">
+            Offline mode: approval checks require internet.
+          </div>
         )}
         {toast && <Toast msg={toast.msg} emoji={toast.emoji} />}
 
@@ -333,7 +411,9 @@ function App() {
   return (
     <div className="app">
       {isOffline && (
-        <div className="offline-banner">Offline mode: live data may be stale.</div>
+        <div className="offline-banner">
+          Offline mode: live data may be stale.
+        </div>
       )}
       {toast && <Toast msg={toast.msg} emoji={toast.emoji} />}
 
@@ -358,6 +438,8 @@ function App() {
           match={selectedMatch}
           prediction={predictions[selectedId]}
           onPredict={handlePredict}
+          aiHelpEnabled={AI_HELP_ENABLED}
+          onRequestAiHelp={handleRequestAiHelp}
           onBack={() => setScreen("home")}
         />
       )}

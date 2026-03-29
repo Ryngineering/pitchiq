@@ -587,6 +587,31 @@ export async function upsertPrediction({ userId, matchId, pickedTeamId, probabil
 }
 
 /**
+ * Request AI match help from the Supabase Edge Function.
+ * Expected function name: ai-help
+ */
+export async function requestAiMatchHelp({ matchId, mode }) {
+  if (!supabase) {
+    return {
+      data: null,
+      error: new Error("Supabase not configured"),
+    };
+  }
+
+  const { data, error } = await supabase.functions.invoke("ai-help", {
+    body: {
+      matchId,
+      mode,
+    },
+  });
+
+  return {
+    data: data ?? null,
+    error: error ?? null,
+  };
+}
+
+/**
  * Load all predictions for the signed-in user, including the match
  * abbreviations for display.
  * Returns array of prediction rows with joined match data.

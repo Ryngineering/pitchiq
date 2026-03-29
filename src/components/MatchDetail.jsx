@@ -1,7 +1,14 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { calcPts } from "../data";
 import ProbBar from "./ProbBar";
-import { ChevronLeft, RefreshCw, Check, Clock } from "lucide-react";
+import {
+  ChevronLeft,
+  RefreshCw,
+  Check,
+  Clock,
+  Sparkles,
+  ShieldAlert,
+} from "lucide-react";
 
 /* ── Cricket overs math ──────────────────────────────────────────────── */
 
@@ -166,9 +173,22 @@ function extractLiveStats(match) {
   };
 }
 
-export default function MatchDetail({ match, prediction, onPredict, onBack }) {
+export default function MatchDetail({
+  match,
+  prediction,
+  onPredict,
+  onBack,
+  aiHelpEnabled: aiHelpEnabledProp,
+  onRequestAiHelp,
+}) {
   const [selected, setSelected] = useState(null);
   const [changing, setChanging] = useState(false);
+  const [aiMode, setAiMode] = useState("value");
+  const [aiConfirmOpen, setAiConfirmOpen] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState(null);
+  const [localAiPayload, setLocalAiPayload] = useState(null);
+  const [aiUsageLocked, setAiUsageLocked] = useState(false);
 
   const isDone = match.status === "completed";
   const isLive = match.status === "live";
@@ -210,6 +230,14 @@ export default function MatchDetail({ match, prediction, onPredict, onBack }) {
   const pred = prediction;
   const predWon = isDone && pred && match.winner === pred.team;
 
+  const aiHelpEnabled =
+    aiHelpEnabledProp ?? import.meta.env.VITE_AI_HELP_ENABLED !== "false";
+  const aiHelpPayload = match.aiHelpPayload ?? localAiPayload;
+  const aiHelpUsed = Boolean(
+    match.aiHelpUsed || aiHelpPayload || aiUsageLocked,
+  );
+  const aiHelpStorageKey = `pitchiq_ai_help_${match.id}`;
+
   const liveStats = useMemo(
     () => (isLive ? extractLiveStats(match) : null),
     [isLive, match],
@@ -219,6 +247,31 @@ export default function MatchDetail({ match, prediction, onPredict, onBack }) {
   const inningsLabel = liveStats
     ? `${liveStats.inningNumber === 1 ? "1st" : "2nd"} innings`
     : null;
+
+  useEffect(() => {
+    setAiMode("value");
+    setAiConfirmOpen(false);
+    setAiLoading(false);
+    setAiError(null);
+    setAiUsageLocked(false);
+    if (typeof window === "undefined") {
+      setLocalAiPayload(null);
+      return;
+    }
+
+    const stored = window.sessionStorage.getItem(aiHelpStorageKey);
+    if (!stored) {
+      setLocalAiPayload(null);
+      return;
+    }
+
+    try {
+      setLocalAiPayload(JSON.parse(stored));
+    } catch {
+      window.sessionStorage.removeItem(aiHelpStorageKey);
+      setLocalAiPayload(null);
+    }
+  }, [aiHelpStorageKey, match.id]);
 
   const handleConfirm = () => {
     if (!selected) return;
@@ -233,6 +286,83 @@ export default function MatchDetail({ match, prediction, onPredict, onBack }) {
   const handleTabClick = (tab) => {
     if (tab === "live" && !isLive) return;
     setActiveTab(tab);
+  };
+
+  const buildFallbackAiPayload = (mode) => {
+    const probability = Number(match.t1p ?? 50);
+    const recommendHome = probability >= 50;
+    const recommended = recommendHome
+      ? {
+          id: match.t1TeamId,
+          name: t1.name,
+          abbreviation: t1.s,
+        }
+      : {
+          id: match.t2TeamId,
+          name: t2.name,
+          abbreviation: t2.s,
+        };
+
+    const confidence = Math.round(
+      recommendHome ? probability : 100 - probability,
+    );
+    const upside = mode === "contrarian" ? "higher-upside" : "higher-safety";
+
+    return {
+      mode,
+      confidence,
+      headline: `${recommended.abbreviation} has the ${upside} setup right now`,
+      recommendedTeam: recommended,
+      insights: [
+        `Live model gives ${recommended.abbreviation} a stronger win edge at this phase.`,
+        `Recent run-rate pressure favors ${recommended.abbreviation} if wickets are preserved.`,
+        `Top-order impact and current match context suggest a stable path to close this out.`,
+      ],
+      riskWarning:
+        "One wicket cluster or a 15+ run over can rapidly swing the balance in T20.",
+      invalidationConditions: [
+        "Two wickets in the next 12 balls",
+        "Required rate jumps by 2.0+ within one over",
+      ],
+      sources: [],
+    };
+  };
+
+  const handleAiConfirm = async () => {
+    if (!aiHelpEnabled || aiHelpUsed || isDone || aiLoading) {
+      setAiConfirmOpen(false);
+      return;
+    }
+
+    setAiConfirmOpen(false);
+    setAiLoading(true);
+    setAiError(null);
+
+    try {
+      // UI-first integration: backend hook can replace this fallback later.
+      let payload;
+      if (onRequestAiHelp) {
+        payload = await onRequestAiHelp({ matchId: match.id, mode: aiMode });
+      } else {
+        await new Promise((resolve) => setTimeout(resolve, 1700));
+        payload = buildFallbackAiPayload(aiMode);
+      }
+
+      setLocalAiPayload(payload);
+      if (typeof window !== "undefined") {
+        window.sessionStorage.setItem(
+          aiHelpStorageKey,
+          JSON.stringify(payload),
+        );
+      }
+    } catch (error) {
+      if (error?.code === "AI_HELP_ALREADY_USED") {
+        setAiUsageLocked(true);
+      }
+      setAiError(error?.message || "Unable to generate AI guidance right now.");
+    } finally {
+      setAiLoading(false);
+    }
   };
 
   return (
@@ -459,6 +589,123 @@ export default function MatchDetail({ match, prediction, onPredict, onBack }) {
                 </div>
               )}
             </div>
+
+            {!isDone && (
+              <div
+                className={`ai-coach-card ${!aiHelpEnabled ? "disabled" : ""}`}
+                style={{ margin: "0 16px 14px" }}
+              >
+                <div className="ai-coach-head">
+                  <div className="ai-coach-title-wrap">
+                    <span className="ai-coach-kicker">Smart Assist</span>
+                    <div className="ai-coach-title-row">
+                      <Sparkles size={15} />
+                      <span className="ai-coach-title">AI Match Coach</span>
+                    </div>
+                  </div>
+                  <span className="ai-once-pill">1 use / match</span>
+                </div>
+
+                {!aiHelpEnabled && (
+                  <div className="ai-muted-note">
+                    AI Coach is currently paused to control LLM spend.
+                  </div>
+                )}
+
+                {aiHelpEnabled && !aiHelpPayload && (
+                  <>
+                    <div className="ai-mode-row">
+                      {[
+                        { key: "safe", label: "Safe" },
+                        { key: "value", label: "Value" },
+                        { key: "contrarian", label: "Bold" },
+                      ].map((mode) => (
+                        <button
+                          key={mode.key}
+                          className={`ai-mode-chip ${aiMode === mode.key ? "active" : ""}`}
+                          onClick={() => setAiMode(mode.key)}
+                          disabled={aiLoading || aiHelpUsed}
+                        >
+                          {mode.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="ai-action-row">
+                      <button
+                        className="ai-ask-btn"
+                        onClick={() => setAiConfirmOpen(true)}
+                        disabled={aiLoading || aiHelpUsed}
+                      >
+                        {aiHelpUsed ? "AI Already Used" : "Get AI Guidance"}
+                      </button>
+                    </div>
+
+                    <div className="ai-muted-note">
+                      You will need to confirm. Once used, this cannot be used
+                      again for this match.
+                    </div>
+                  </>
+                )}
+
+                {aiLoading && (
+                  <div
+                    className="ai-loader-card"
+                    role="status"
+                    aria-live="polite"
+                  >
+                    <div className="ai-loader-track">
+                      <span className="ai-stump" />
+                      <span className="ai-stump" />
+                      <span className="ai-stump" />
+                      <span className="ai-ball" />
+                    </div>
+                    <div className="ai-loader-copy">
+                      Coach is reading match momentum...
+                    </div>
+                  </div>
+                )}
+
+                {aiError && (
+                  <div className="ai-error-row">
+                    <ShieldAlert size={14} />
+                    <span>{aiError}</span>
+                  </div>
+                )}
+
+                {aiHelpPayload && (
+                  <div className="ai-result-shell">
+                    <div className="ai-result-top">
+                      <div className="ai-result-headline">
+                        {aiHelpPayload.headline}
+                      </div>
+                      <div className="ai-conf-pill">
+                        {aiHelpPayload.confidence}% confidence
+                      </div>
+                    </div>
+
+                    <div className="ai-pick-row">
+                      <span className="ai-pick-label">Suggested pick</span>
+                      <span className="ai-pick-team">
+                        {aiHelpPayload.recommendedTeam?.abbreviation || "TBD"}
+                      </span>
+                    </div>
+
+                    <ul className="ai-bullets">
+                      {(aiHelpPayload.insights || [])
+                        .slice(0, 4)
+                        .map((line) => (
+                          <li key={line}>{line}</li>
+                        ))}
+                    </ul>
+
+                    <div className="ai-risk-note">
+                      <span>Risk:</span> {aiHelpPayload.riskWarning}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Completed → show result + verdict */}
             {isDone && (
@@ -700,6 +947,34 @@ export default function MatchDetail({ match, prediction, onPredict, onBack }) {
           </>
         )}
       </div>
+
+      {aiConfirmOpen && (
+        <div className="ai-confirm-overlay" role="dialog" aria-modal="true">
+          <div className="ai-confirm-modal">
+            <div className="ai-confirm-kicker">One-time AI Assist</div>
+            <div className="ai-confirm-title">Use AI Coach for this match?</div>
+            <div className="ai-confirm-copy">
+              This can only be used once for this match. You are about to
+              consume your single AI assistance chance.
+            </div>
+
+            <div className="ai-confirm-actions">
+              <button
+                className="ai-confirm-btn subtle"
+                onClick={() => setAiConfirmOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="ai-confirm-btn primary"
+                onClick={handleAiConfirm}
+              >
+                Yes, use AI now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
