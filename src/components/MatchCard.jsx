@@ -9,6 +9,12 @@ export default function MatchCard({
   displayLabel,
   pickCounts,
 }) {
+  const [isCrowdOpen, setIsCrowdOpen] = React.useState(false);
+  const isTouchMode = React.useMemo(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return false;
+    return window.matchMedia("(hover: none)").matches;
+  }, []);
+
   const t1 = match.t1Meta || {
     s: match.t1 || "TBD",
     name: match.t1Name || "Unknown Team",
@@ -73,6 +79,19 @@ export default function MatchCard({
       : crowdFavId === match.t2TeamId
         ? t2.s
         : null;
+  const crowdMessage =
+    totalPicks === 0 || !crowdFavTeam
+      ? "Be the trendsetter ✨"
+      : `${crowdFavCount}/${totalPicks} picked ${crowdFavTeam}`;
+
+  const handleCrowdClick = (event) => {
+    if (!isTouchMode) {
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    setIsCrowdOpen((prev) => !prev);
+  };
 
   const handleKeyDown = (event) => {
     if (event.key === "Enter" || event.key === " ") {
@@ -197,17 +216,19 @@ export default function MatchCard({
           <span className="pred-text">
             Picked <strong>{pred.team || "TBD"}</strong> to win
           </span>
-          <div className="mc-crowd">
+          <button
+            type="button"
+            className={`mc-crowd ${isTouchMode ? "touch" : ""} ${isCrowdOpen ? "open" : ""}`}
+            onClick={handleCrowdClick}
+            aria-label="View crowd picks"
+            aria-expanded={isTouchMode ? isCrowdOpen : undefined}
+          >
             <span className="mc-crowd-icon">👥</span>
             <span className="mc-crowd-short">
               {totalPicks > 0 ? totalPicks : "?"}
             </span>
-            <span className="mc-crowd-full">
-              {totalPicks === 0 || !crowdFavTeam
-                ? "Be the trendsetter ✨"
-                : `${crowdFavCount}/${totalPicks} picked ${crowdFavTeam}`}
-            </span>
-          </div>
+            <span className="mc-crowd-full">{crowdMessage}</span>
+          </button>
         </div>
       )}
 
@@ -227,17 +248,19 @@ export default function MatchCard({
         <div className="pred-strip pred-strip-cta">
           <div className="pred-dot pred-dot-cta" />
           <span className="pred-text pred-text-cta">Make your prediction</span>
-          <div className="mc-crowd">
+          <button
+            type="button"
+            className={`mc-crowd ${isTouchMode ? "touch" : ""} ${isCrowdOpen ? "open" : ""}`}
+            onClick={handleCrowdClick}
+            aria-label="View crowd picks"
+            aria-expanded={isTouchMode ? isCrowdOpen : undefined}
+          >
             <span className="mc-crowd-icon">👥</span>
             <span className="mc-crowd-short">
               {totalPicks > 0 ? totalPicks : "?"}
             </span>
-            <span className="mc-crowd-full">
-              {totalPicks === 0 || !crowdFavTeam
-                ? "Be the trendsetter ✨"
-                : `${crowdFavCount}/${totalPicks} picked ${crowdFavTeam}`}
-            </span>
-          </div>
+            <span className="mc-crowd-full">{crowdMessage}</span>
+          </button>
         </div>
       )}
     </div>

@@ -435,7 +435,7 @@ function App() {
             setSelectedId(id);
             setScreen("match");
           }}
-          onBell={() => {
+          onSettings={() => {
             setScreen("profile");
           }}
         />
@@ -452,7 +452,11 @@ function App() {
         />
       )}
       {screen === "leaderboard" && (
-        <LeaderboardScreen currentUserId={user.id} matches={matches} />
+        <LeaderboardScreen
+          currentUserId={user.id}
+          matches={matches}
+          onSettings={() => setScreen("profile")}
+        />
       )}
       {screen === "profile" && (
         <ProfileScreen

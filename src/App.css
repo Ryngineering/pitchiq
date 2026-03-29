@@ -1061,8 +1061,21 @@ body { font-family: 'Nunito', sans-serif; color: var(--text); }
 
 /* ── LEADERBOARD ── */
 .lb-header { padding: 18px 16px 12px; }
-.lb-header-title { font-family: 'Bebas Neue'; font-size: 28px; letter-spacing: 2px; margin-bottom: 4px; }
-.lb-header-sub { font-size: 13px; color: var(--sub); font-weight: 600; }
+.lb-header-title {
+  font-family: 'Bebas Neue';
+  font-size: 28px;
+  letter-spacing: 2px;
+  margin-bottom: 4px;
+  text-align: center;
+  color: var(--gold);
+  text-shadow: 0 0 16px rgba(255, 183, 0, 0.2);
+}
+.lb-header-sub {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 700;
+  text-align: center;
+}
 
 .podium { display: flex; align-items: flex-end; justify-content: center; gap: 6px; padding: 0 16px 20px; }
 .podium-item { display: flex; flex-direction: column; align-items: center; gap: 6px; }
@@ -1226,6 +1239,32 @@ body { font-family: 'Nunito', sans-serif; color: var(--text); }
   transition: background 0.12s;
 }
 .settings-item:hover { background: rgba(255,71,87,0.08); }
+
+/* Match detail floating back arrow */
+.side-back-btn {
+  position: fixed;
+  left: max(8px, calc((100vw - min(430px, 100vw)) / 2 + 8px));
+  top: 50%;
+  transform: translateY(-50%);
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+  background: rgba(15, 22, 40, 0.88);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 26;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.4);
+}
+
+.side-back-btn:active {
+  transform: translateY(-50%) scale(0.95);
+}
 
 /* No-predictions CTA */
 .profile-cta-btn {
@@ -1535,6 +1574,11 @@ body { font-family: 'Nunito', sans-serif; color: var(--text); }
   flex-shrink: 0;
   cursor: default;
   overflow: hidden;
+  border: none;
+  background: none;
+  padding: 0;
+  font-family: inherit;
+  color: inherit;
 }
 .mc-crowd-icon {
   font-size: 11px;
@@ -1560,6 +1604,21 @@ body { font-family: 'Nunito', sans-serif; color: var(--text); }
   opacity: 0;
   transition: max-width 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.2s;
 }
+
+.mc-crowd.touch {
+  cursor: pointer;
+}
+
+.mc-crowd.touch.open .mc-crowd-short {
+  max-width: 0;
+  opacity: 0;
+}
+
+.mc-crowd.touch.open .mc-crowd-full {
+  max-width: 180px;
+  opacity: 1;
+}
+
 /* Desktop hover: collapse count badge, expand full message */
 @media (hover: hover) {
   .match-card:hover .mc-crowd-short {
@@ -1569,5 +1628,11 @@ body { font-family: 'Nunito', sans-serif; color: var(--text); }
   .match-card:hover .mc-crowd-full {
     max-width: 180px;
     opacity: 1;
+  }
+}
+
+@media (min-width: 900px) {
+  .side-back-btn {
+    left: max(18px, calc((100vw - min(1200px, 100vw)) / 2 + 18px));
   }
 }

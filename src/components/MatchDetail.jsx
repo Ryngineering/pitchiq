@@ -396,11 +396,15 @@ export default function MatchDetail({
 
   return (
     <div className="screen">
-      <div className="screen-pad">
-        <button className="back-btn" onClick={onBack}>
-          <ChevronLeft size={18} /> Matches
-        </button>
+      <button
+        className="side-back-btn"
+        onClick={onBack}
+        aria-label="Back to home"
+      >
+        <ChevronLeft size={20} />
+      </button>
 
+      <div className="screen-pad">
         <div className="match-hero">
           <div className="match-hero-label">
             <span>{match.label}</span>

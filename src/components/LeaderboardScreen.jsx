@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Settings } from "lucide-react";
 import { fetchLeaderboard } from "../lib/supabase";
 
 const LEADERBOARD_SNAPSHOT_KEY = "pitchiq-leaderboard-ranks-v1";
@@ -66,7 +67,11 @@ function getSeasonNarrative(totalMatches, settledMatches, remainingMatches) {
   return `${remainingMatches} match${remainingMatches !== 1 ? "es" : ""} left in the season — every settled result can still move this table.`;
 }
 
-export default function LeaderboardScreen({ currentUserId, matches = [] }) {
+export default function LeaderboardScreen({
+  currentUserId,
+  matches = [],
+  onSettings,
+}) {
   const [rows, setRows] = useState([]);
   const [rankChanges, setRankChanges] = useState({});
   const [loading, setLoading] = useState(true);
@@ -118,9 +123,13 @@ export default function LeaderboardScreen({ currentUserId, matches = [] }) {
     <div className="screen">
       <div className="header">
         <span className="header-logo">🏏 PITCHIQ</span>
-        <span style={{ fontSize: 13, fontWeight: 800, color: "var(--muted)" }}>
-          Leaderboard
-        </span>
+        <button
+          className="settings-btn"
+          aria-label="Settings"
+          onClick={onSettings}
+        >
+          <Settings size={16} />
+        </button>
       </div>
       <div className="screen-pad">
         <div className="lb-header">

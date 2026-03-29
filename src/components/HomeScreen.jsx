@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import MatchCard from "./MatchCard";
-import { Bell, ChevronUp } from "lucide-react";
+import { Settings, ChevronUp } from "lucide-react";
 
 function buildDisplayLabel(match, sequence) {
   const base = `Match ${sequence}`;
@@ -23,7 +23,7 @@ export default function HomeScreen({
   predictions,
   onMatch,
   myPoints,
-  onBell,
+  onSettings,
   pickCounts,
   streak,
 }) {
@@ -69,9 +69,8 @@ export default function HomeScreen({
             <span className="streak-chip">🔥 {streak} in a row</span>
           )}
           <span className="pts-chip">⚡ {myPoints} PTS</span>
-          <button className="bell-btn" onClick={onBell}>
-            <Bell size={16} color="rgba(255,255,255,0.6)" />
-            <div className="bell-dot" />
+          <button className="settings-btn" onClick={onSettings}>
+            <Settings size={16} />
           </button>
         </div>
       </div>
