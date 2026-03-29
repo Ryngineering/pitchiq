@@ -40,6 +40,43 @@ function oversToBalls(overs) {
   return whole * 6 + balls;
 }
 
+function ballsToOversString(totalBalls) {
+  const whole = Math.floor(totalBalls / 6);
+  const balls = totalBalls % 6;
+  return `${whole}.${balls}`;
+}
+
+function getTeamOversFromStats(match, teamId) {
+  if (!match?.statistics?.length || teamId == null) return "";
+
+  const totalBalls = match.statistics
+    .filter((stat) => String(stat?.team?.id) === String(teamId))
+    .reduce((teamBalls, stat) => {
+      const bowlers = stat?.team?.inningBowlers;
+      if (!Array.isArray(bowlers)) return teamBalls;
+
+      const inningBalls = bowlers.reduce(
+        (sum, bowler) => sum + oversToBalls(bowler?.overs),
+        0,
+      );
+
+      return teamBalls + inningBalls;
+    }, 0);
+
+  return `(${ballsToOversString(totalBalls)}) ov`;
+}
+
+function sanitizeMatchLabel(label) {
+  const raw = String(label ?? "").trim();
+  if (!raw) return "";
+
+  return raw
+    .replace(/\s*[·-]\s*IPL\s*\d{0,4}\b/gi, "")
+    .replace(/\bIPL\s*\d{0,4}\b/gi, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
 function abbreviateName(fullName) {
   if (!fullName) return "—";
   const parts = fullName.trim().split(/\s+/);
@@ -235,10 +272,9 @@ export default function MatchDetail({
   const t2Score =
     isLive && (!t2RawScore || t2RawScore === "—") ? "0/0" : t2RawScore;
 
-  const t1InfoRaw = String(match.home_info ?? match.t1o ?? "").trim();
-  const t2InfoRaw = String(match.away_info ?? match.t2o ?? "").trim();
-  const t1Info = t1InfoRaw ? `(${t1InfoRaw})` : "";
-  const t2Info = t2InfoRaw ? `(${t2InfoRaw})` : "";
+  const t1Info = getTeamOversFromStats(match, match.t1TeamId);
+  const t2Info = getTeamOversFromStats(match, match.t2TeamId);
+  const heroLabel = sanitizeMatchLabel(match.label);
 
   const pred = prediction;
   const predWon = isDone && pred && match.winner === pred.team;
@@ -424,12 +460,7 @@ export default function MatchDetail({
       <div className="screen-pad">
         <div className="match-hero">
           <div className="match-hero-label">
-            <span>{match.label}</span>
-            {isLive && <span className="badge-live">● LIVE</span>}
-            {match.status === "upcoming" && (
-              <span className="badge-upcoming">UPCOMING</span>
-            )}
-            {isDone && <span className="badge-done">FINAL</span>}
+            <span>{heroLabel || match.label}</span>
           </div>
 
           <div className="big-teams">
@@ -459,6 +490,17 @@ export default function MatchDetail({
               )}
             </div>
             <div className="big-vs">
+              {isLive && (
+                <span className="badge-live big-status-badge">● LIVE</span>
+              )}
+              {match.status === "upcoming" && (
+                <span className="badge-upcoming big-status-badge">
+                  UPCOMING
+                </span>
+              )}
+              {isDone && (
+                <span className="badge-done big-status-badge">FINAL</span>
+              )}
               <span className="big-vs-text">VS</span>
               {inningsLabel && (
                 <span

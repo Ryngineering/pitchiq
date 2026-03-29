@@ -2,6 +2,51 @@ import React from "react";
 import { calcPts } from "../data";
 import ProbBar from "./ProbBar";
 
+function oversToBalls(overs) {
+  const n = Number(overs);
+  if (!Number.isFinite(n) || n < 0) return 0;
+  const whole = Math.floor(n);
+  const balls = Math.round((n - whole) * 10);
+  return whole * 6 + balls;
+}
+
+function ballsToOversString(totalBalls) {
+  const whole = Math.floor(totalBalls / 6);
+  const balls = totalBalls % 6;
+  return `${whole}.${balls}`;
+}
+
+function getTeamOversFromStats(match, teamId) {
+  if (!match?.statistics?.length || teamId == null) return "";
+
+  const totalBalls = match.statistics
+    .filter((stat) => String(stat?.team?.id) === String(teamId))
+    .reduce((teamBalls, stat) => {
+      const bowlers = stat?.team?.inningBowlers;
+      if (!Array.isArray(bowlers)) return teamBalls;
+
+      const inningBalls = bowlers.reduce(
+        (sum, bowler) => sum + oversToBalls(bowler?.overs),
+        0,
+      );
+
+      return teamBalls + inningBalls;
+    }, 0);
+
+  return `(${ballsToOversString(totalBalls)}) ov`;
+}
+
+function sanitizeMatchLabel(label) {
+  const raw = String(label ?? "").trim();
+  if (!raw) return "";
+
+  return raw
+    .replace(/\s*[·-]\s*IPL\s*\d{0,4}\b/gi, "")
+    .replace(/\bIPL\s*\d{0,4}\b/gi, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
 export default function MatchCard({
   match,
   prediction,
@@ -45,10 +90,9 @@ export default function MatchCard({
   const t2Score =
     isLive && (!t2RawScore || t2RawScore === "—") ? "0/0" : t2RawScore;
 
-  const t1InfoRaw = String(match.home_info ?? match.t1o ?? "").trim();
-  const t2InfoRaw = String(match.away_info ?? match.t2o ?? "").trim();
-  const t1Info = t1InfoRaw ? `(${t1InfoRaw})` : "";
-  const t2Info = t2InfoRaw ? `(${t2InfoRaw})` : "";
+  const t1Info = getTeamOversFromStats(match, match.t1TeamId);
+  const t2Info = getTeamOversFromStats(match, match.t2TeamId);
+  const cardLabel = sanitizeMatchLabel(displayLabel || match.label);
 
   const predWon = isDone && pred && match.winner === pred.team;
   const predLost = isDone && pred && match.winner && match.winner !== pred.team;
@@ -110,7 +154,9 @@ export default function MatchCard({
       aria-label={`${t1.s} versus ${t2.s} ${needsPrediction ? "prediction pending" : hasPrediction ? "prediction made" : "match details"}`}
     >
       <div className="mc-top">
-        <span className="mc-label">{displayLabel || match.label}</span>
+        <span className="mc-label">
+          {cardLabel || displayLabel || match.label}
+        </span>
         <div className="mc-top-right">
           {isLive && <span className="badge-live">● LIVE</span>}
           {match.status === "upcoming" && (
@@ -152,7 +198,7 @@ export default function MatchCard({
             {t1.s}
           </span>
           {t1Score && <span className="mc-score">{t1Score}</span>}
-          {t1Info && <span className="mc-score-info">{t1Info} ov</span>}
+          {t1Info && <span className="mc-score-info">{t1Info}</span>}
         </div>
 
         <div className="mc-mid">
@@ -196,7 +242,7 @@ export default function MatchCard({
             {t2.s}
           </span>
           {t2Score && <span className="mc-score">{t2Score}</span>}
-          {t2Info && <span className="mc-score-info">{t2Info} ov</span>}
+          {t2Info && <span className="mc-score-info">{t2Info}</span>}
         </div>
       </div>
 
