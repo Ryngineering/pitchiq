@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { calcPts } from "../data";
 import ProbBar from "./ProbBar";
 import { checkAiHelpUsed } from "../lib/supabase";
@@ -64,17 +64,6 @@ function getTeamOversFromStats(match, teamId) {
     }, 0);
 
   return `(${ballsToOversString(totalBalls)}) ov`;
-}
-
-function sanitizeMatchLabel(label) {
-  const raw = String(label ?? "").trim();
-  if (!raw) return "";
-
-  return raw
-    .replace(/\s*[·-]\s*IPL\s*\d{0,4}\b/gi, "")
-    .replace(/\bIPL\s*\d{0,4}\b/gi, "")
-    .replace(/\s{2,}/g, " ")
-    .trim();
 }
 
 function abbreviateName(fullName) {
@@ -227,6 +216,7 @@ export default function MatchDetail({
   onPredict,
   onBack,
   onSettings,
+  onSignOut,
   aiHelpEnabled: aiHelpEnabledProp,
   onRequestAiHelp,
 }) {
@@ -239,6 +229,8 @@ export default function MatchDetail({
   const [aiCheckingDb, setAiCheckingDb] = useState(true);
   const [aiResultOpen, setAiResultOpen] = useState(false);
   const [aiLoadingQuip, setAiLoadingQuip] = useState(AI_LOADING_QUIPS[0]);
+  const [showSettings, setShowSettings] = useState(false);
+  const settingsRef = useRef(null);
 
   const isDone = match.status === "completed";
   const isLive = match.status === "live";
@@ -274,7 +266,6 @@ export default function MatchDetail({
 
   const t1Info = getTeamOversFromStats(match, match.t1TeamId);
   const t2Info = getTeamOversFromStats(match, match.t2TeamId);
-  const heroLabel = sanitizeMatchLabel(match.label);
 
   const pred = prediction;
   const predWon = isDone && pred && match.winner === pred.team;
@@ -309,6 +300,19 @@ export default function MatchDetail({
     // AI result is transient — cleared on match change
     setLocalAiPayload(null);
   }, [match.id]);
+
+  // Close settings dropdown when clicking outside.
+  useEffect(() => {
+    if (!showSettings) return undefined;
+    const handleClick = (event) => {
+      if (settingsRef.current && !settingsRef.current.contains(event.target)) {
+        setShowSettings(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [showSettings]);
 
   // Check if user has already used AI help for this match (from DB)
   useEffect(() => {
@@ -447,22 +451,51 @@ export default function MatchDetail({
           {aiHelpUsed && !isDone && !aiResultOpen && (
             <span className="ai-used-chip">🤖 AI used</span>
           )}
-          <button
-            className="settings-btn"
-            aria-label="Settings"
-            onClick={onSettings}
-          >
-            <Settings size={16} />
-          </button>
+          <div className="settings-wrap" ref={settingsRef}>
+            <button
+              className="settings-btn"
+              aria-label="Settings"
+              onClick={() => setShowSettings((value) => !value)}
+            >
+              <Settings size={16} />
+            </button>
+            {showSettings && (
+              <div className="settings-dropdown">
+                <button
+                  className="settings-item"
+                  onClick={() => {
+                    setShowSettings(false);
+                    if (onSignOut) {
+                      onSignOut();
+                      return;
+                    }
+                    onSettings?.();
+                  }}
+                >
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <polyline points="16 17 21 12 16 7" />
+                    <line x1="21" y1="12" x2="9" y2="12" />
+                  </svg>
+                  Sign out
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       <div className="screen-pad">
         <div className="match-hero">
-          <div className="match-hero-label">
-            <span>{heroLabel || match.label}</span>
-          </div>
-
           <div className="big-teams">
             <div className="big-team">
               <div className="big-logo" style={{ background: t1.bg }}>
