@@ -6,9 +6,17 @@ import {
   RefreshCw,
   Check,
   Clock,
-  Sparkles,
+  X,
   ShieldAlert,
 } from "lucide-react";
+
+const AI_LOADING_QUIPS = [
+  "Reading the pitch report...",
+  "Crunching match data...",
+  "Consulting the cricket gods...",
+  "Analysing batting intent...",
+  "Checking the run-rate tea leaves...",
+];
 
 /* ── Cricket overs math ──────────────────────────────────────────────── */
 
@@ -183,13 +191,13 @@ export default function MatchDetail({
 }) {
   const [selected, setSelected] = useState(null);
   const [changing, setChanging] = useState(false);
-  const [aiMode, setAiMode] = useState("value");
-  const [aiConfirmOpen, setAiConfirmOpen] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState(null);
   const [localAiPayload, setLocalAiPayload] = useState(null);
   const [aiAlreadyUsedFromDb, setAiAlreadyUsedFromDb] = useState(false);
   const [aiCheckingDb, setAiCheckingDb] = useState(true);
+  const [aiResultOpen, setAiResultOpen] = useState(false);
+  const [aiLoadingQuip, setAiLoadingQuip] = useState(AI_LOADING_QUIPS[0]);
 
   const isDone = match.status === "completed";
   const isLive = match.status === "live";
@@ -249,10 +257,9 @@ export default function MatchDetail({
     : null;
 
   useEffect(() => {
-    setAiMode("value");
-    setAiConfirmOpen(false);
     setAiLoading(false);
     setAiError(null);
+    setAiResultOpen(false);
     // AI result is transient — cleared on match change
     setLocalAiPayload(null);
   }, [match.id]);
@@ -325,32 +332,38 @@ export default function MatchDetail({
     };
   };
 
-  const handleAiConfirm = async () => {
-    if (!aiHelpEnabled || aiHelpUsed || isDone || aiLoading) {
-      setAiConfirmOpen(false);
+  const handleAiFabClick = async () => {
+    // Already used — show toast-like message
+    if (aiHelpUsed) {
+      setAiError("AI prediction for this match already generated.");
+      setTimeout(() => setAiError(null), 3000);
       return;
     }
+    if (!aiHelpEnabled || isDone || aiLoading) return;
 
-    setAiConfirmOpen(false);
     setAiLoading(true);
     setAiError(null);
+    setAiLoadingQuip(
+      AI_LOADING_QUIPS[Math.floor(Math.random() * AI_LOADING_QUIPS.length)],
+    );
 
     try {
-      // UI-first integration: backend hook can replace this fallback later.
       let payload;
       if (onRequestAiHelp) {
-        payload = await onRequestAiHelp({ matchId: match.id, mode: aiMode });
+        payload = await onRequestAiHelp({ matchId: match.id, mode: "value" });
       } else {
         await new Promise((resolve) => setTimeout(resolve, 1700));
-        payload = buildFallbackAiPayload(aiMode);
+        payload = buildFallbackAiPayload("value");
       }
 
       setLocalAiPayload(payload);
+      setAiResultOpen(true);
     } catch (error) {
       if (error?.code === "AI_HELP_ALREADY_USED") {
         setAiAlreadyUsedFromDb(true);
       }
       setAiError(error?.message || "Unable to generate AI guidance right now.");
+      setTimeout(() => setAiError(null), 3500);
     } finally {
       setAiLoading(false);
     }
@@ -580,123 +593,6 @@ export default function MatchDetail({
                 </div>
               )}
             </div>
-
-            {!isDone && (
-              <div
-                className={`ai-coach-card ${!aiHelpEnabled ? "disabled" : ""}`}
-                style={{ margin: "0 16px 14px" }}
-              >
-                <div className="ai-coach-head">
-                  <div className="ai-coach-title-wrap">
-                    <span className="ai-coach-kicker">Smart Assist</span>
-                    <div className="ai-coach-title-row">
-                      <Sparkles size={15} />
-                      <span className="ai-coach-title">AI Match Coach</span>
-                    </div>
-                  </div>
-                  <span className="ai-once-pill">1 use / match</span>
-                </div>
-
-                {!aiHelpEnabled && (
-                  <div className="ai-muted-note">
-                    AI Coach is currently paused to control LLM spend.
-                  </div>
-                )}
-
-                {aiHelpEnabled && !aiHelpPayload && (
-                  <>
-                    <div className="ai-mode-row">
-                      {[
-                        { key: "safe", label: "Safe" },
-                        { key: "value", label: "Value" },
-                        { key: "contrarian", label: "Bold" },
-                      ].map((mode) => (
-                        <button
-                          key={mode.key}
-                          className={`ai-mode-chip ${aiMode === mode.key ? "active" : ""}`}
-                          onClick={() => setAiMode(mode.key)}
-                          disabled={aiLoading || aiHelpUsed}
-                        >
-                          {mode.label}
-                        </button>
-                      ))}
-                    </div>
-
-                    <div className="ai-action-row">
-                      <button
-                        className="ai-ask-btn"
-                        onClick={() => setAiConfirmOpen(true)}
-                        disabled={aiLoading || aiHelpUsed}
-                      >
-                        {aiHelpUsed ? "AI Already Used" : "Get AI Guidance"}
-                      </button>
-                    </div>
-
-                    <div className="ai-muted-note">
-                      You will need to confirm. Once used, this cannot be used
-                      again for this match.
-                    </div>
-                  </>
-                )}
-
-                {aiLoading && (
-                  <div
-                    className="ai-loader-card"
-                    role="status"
-                    aria-live="polite"
-                  >
-                    <div className="ai-loader-track">
-                      <span className="ai-stump" />
-                      <span className="ai-stump" />
-                      <span className="ai-stump" />
-                      <span className="ai-ball" />
-                    </div>
-                    <div className="ai-loader-copy">
-                      Coach is reading match momentum...
-                    </div>
-                  </div>
-                )}
-
-                {aiError && (
-                  <div className="ai-error-row">
-                    <ShieldAlert size={14} />
-                    <span>{aiError}</span>
-                  </div>
-                )}
-
-                {aiHelpPayload && (
-                  <div className="ai-result-shell">
-                    <div className="ai-result-top">
-                      <div className="ai-result-headline">
-                        {aiHelpPayload.headline}
-                      </div>
-                      <div className="ai-conf-pill">
-                        {aiHelpPayload.confidence}% confidence
-                      </div>
-                    </div>
-
-                    <div className="ai-pick-row">
-                      <span className="ai-pick-label">Suggested pick</span>
-                      <span className="ai-pick-team">
-                        {aiHelpPayload.recommendedTeam?.abbreviation || "TBD"}
-                      </span>
-                    </div>
-
-                    <ul className="ai-bullets">
-                      {(aiHelpPayload.insights || [])
-                        .slice(0, 4)
-                        .map((line) => (
-                          <li key={line}>{line}</li>
-                        ))}
-                    </ul>
-
-                    <div className="ai-risk-note">
-                      <span>Risk:</span> {aiHelpPayload.riskWarning}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
 
             {/* Completed → show result + verdict */}
             {isDone && (
@@ -939,29 +835,76 @@ export default function MatchDetail({
         )}
       </div>
 
-      {aiConfirmOpen && (
-        <div className="ai-confirm-overlay" role="dialog" aria-modal="true">
-          <div className="ai-confirm-modal">
-            <div className="ai-confirm-kicker">One-time AI Assist</div>
-            <div className="ai-confirm-title">Use AI Coach for this match?</div>
-            <div className="ai-confirm-copy">
-              This can only be used once for this match. You are about to
-              consume your single AI assistance chance.
-            </div>
+      {/* ── Floating AI Bot FAB ── */}
+      {!isDone && (
+        <>
+          <button
+            className={`ai-fab ${aiLoading ? "spinning" : ""} ${aiHelpUsed ? "used" : ""}`}
+            onClick={handleAiFabClick}
+            aria-label="AI Prediction"
+            disabled={aiLoading}
+          >
+            <span className="ai-fab-halo" />
+            <span className="ai-fab-icon">🤖</span>
+          </button>
 
-            <div className="ai-confirm-actions">
-              <button
-                className="ai-confirm-btn subtle"
-                onClick={() => setAiConfirmOpen(false)}
-              >
-                Cancel
-              </button>
-              <button
-                className="ai-confirm-btn primary"
-                onClick={handleAiConfirm}
-              >
-                Yes, use AI now
-              </button>
+          {aiLoading && (
+            <div
+              className="ai-fab-loading-quip"
+              role="status"
+              aria-live="polite"
+            >
+              {aiLoadingQuip}
+            </div>
+          )}
+
+          {aiError && !aiLoading && (
+            <div className="ai-fab-error-toast">
+              <ShieldAlert size={13} />
+              <span>{aiError}</span>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ── Folding AI Result Panel ── */}
+      {aiResultOpen && aiHelpPayload && (
+        <div className="ai-result-overlay">
+          <div className="ai-result-panel">
+            <button
+              className="ai-result-close"
+              onClick={() => setAiResultOpen(false)}
+              aria-label="Close AI result"
+            >
+              <X size={18} />
+            </button>
+
+            <div className="ai-result-shell">
+              <div className="ai-result-top">
+                <div className="ai-result-headline">
+                  {aiHelpPayload.headline}
+                </div>
+                <div className="ai-conf-pill">
+                  {aiHelpPayload.confidence}% confidence
+                </div>
+              </div>
+
+              <div className="ai-pick-row">
+                <span className="ai-pick-label">Suggested pick</span>
+                <span className="ai-pick-team">
+                  {aiHelpPayload.recommendedTeam?.abbreviation || "TBD"}
+                </span>
+              </div>
+
+              <ul className="ai-bullets">
+                {(aiHelpPayload.insights || []).slice(0, 4).map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
+
+              <div className="ai-risk-note">
+                <span>Risk:</span> {aiHelpPayload.riskWarning}
+              </div>
             </div>
           </div>
         </div>
