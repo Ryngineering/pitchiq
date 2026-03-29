@@ -138,24 +138,17 @@ function extractLiveStats(match) {
     });
   }
 
-  // Current bowler — last in the bowlers array
+  // All bowlers in this innings
   const bowlers =
     team?.inningBowlers ?? currentInning.team?.inningBowlers ?? [];
-  // Bowlers are from the *fielding* team, so check the OTHER innings' team bowlers
-  // Actually, in the API structure, the bowling stats for this innings are stored
-  // under the batting team's object as inningBowlers (bowlers bowling TO them)
-  let currentBowler = null;
-  if (bowlers.length > 0) {
-    const last = bowlers[bowlers.length - 1];
-    currentBowler = {
-      name: last.player?.name ?? "Unknown",
-      abbrevName: abbreviateName(last.player?.name),
-      wickets: last.wickets ?? 0,
-      concededRuns: last.concededRuns ?? 0,
-      overs: last.overs ?? 0,
-      economy: last.economy ?? 0,
-    };
-  }
+  const allBowlers = bowlers.map((b) => ({
+    name: b.player?.name ?? "Unknown",
+    abbrevName: abbreviateName(b.player?.name),
+    wickets: b.wickets ?? 0,
+    concededRuns: b.concededRuns ?? 0,
+    overs: b.overs ?? 0,
+    economy: b.economy ?? 0,
+  }));
 
   return {
     battingTeam: team?.abbreviation ?? "—",
@@ -169,7 +162,7 @@ function extractLiveStats(match) {
     runsNeeded,
     ballsRemaining,
     battersAtCrease,
-    currentBowler,
+    allBowlers,
   };
 }
 
@@ -403,18 +396,26 @@ export default function MatchDetail({ match, prediction, onPredict, onBack }) {
                   </div>
                 )}
 
-                {/* Current bowler */}
-                {liveStats.currentBowler && (
-                  <div className="live-bowler">
-                    <span className="bowler-label">Bowling:</span>{" "}
-                    <span className="bowler-name">
-                      {liveStats.currentBowler.abbrevName}
-                    </span>
-                    <span className="bowler-stats">
-                      {liveStats.currentBowler.wickets}/
-                      {liveStats.currentBowler.concededRuns} (
-                      {liveStats.currentBowler.overs} ov)
-                    </span>
+                {/* Bowlers */}
+                {liveStats.allBowlers.length > 0 && (
+                  <div className="live-bowlers">
+                    <div className="live-bowlers-title">BOWLING</div>
+                    <div className="live-bowlers-header">
+                      <span className="bwl-h-name">BOWLER</span>
+                      <span className="bwl-h-stat">OV</span>
+                      <span className="bwl-h-stat">W/R</span>
+                      <span className="bwl-h-stat">ECON</span>
+                    </div>
+                    {liveStats.allBowlers.map((b) => (
+                      <div className="live-bowler-row" key={b.name}>
+                        <span className="bwl-name">{b.abbrevName}</span>
+                        <span className="bwl-stat">{b.overs}</span>
+                        <span className="bwl-stat">
+                          {b.wickets}/{b.concededRuns}
+                        </span>
+                        <span className="bwl-stat">{b.economy}</span>
+                      </div>
+                    ))}
                   </div>
                 )}
               </>
@@ -531,15 +532,6 @@ export default function MatchDetail({ match, prediction, onPredict, onBack }) {
                           {pred.team || "TBD"} to win
                         </div>
                       </div>
-                      <button
-                        className="change-btn"
-                        onClick={() => {
-                          setChanging(true);
-                          setSelected(null);
-                        }}
-                      >
-                        Change
-                      </button>
                     </div>
                     <div className="cpred-pts-row">
                       <span className="cpred-pts-label">Points if correct</span>

@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
 import MatchCard from "./MatchCard";
-import { Bell } from "lucide-react";
+import { Bell, ChevronUp } from "lucide-react";
 
 function buildDisplayLabel(match, sequence) {
   const base = `Match ${sequence}`;
@@ -27,9 +27,29 @@ export default function HomeScreen({
   pickCounts,
   streak,
 }) {
+  const [filter, setFilter] = useState("all");
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const screenRef = useRef(null);
+
   const live = matches.filter((m) => m.status === "live");
   const upcoming = matches.filter((m) => m.status === "upcoming");
   const done = matches.filter((m) => m.status === "completed");
+
+  useEffect(() => {
+    const el = screenRef.current;
+    if (!el) return;
+    const onScroll = () => setShowScrollTop(el.scrollTop > 300);
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    screenRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const showLive = filter === "all" || filter === "live";
+  const showUpcoming = filter === "all" || filter === "upcoming";
+  const showDone = filter === "all" || filter === "done";
 
   const sequenceByMatchId = React.useMemo(() => {
     const ordered = [...matches].sort(byMatchStartThenId);
@@ -41,7 +61,7 @@ export default function HomeScreen({
   }, [matches]);
 
   return (
-    <div className="screen">
+    <div className="screen" ref={screenRef}>
       <div className="header">
         <span className="header-logo">🏏 PITCHIQ</span>
         <div className="header-right">
@@ -56,8 +76,28 @@ export default function HomeScreen({
         </div>
       </div>
 
+      <div className="home-filter-bar">
+        {[
+          { key: "all", label: "ALL" },
+          { key: "live", label: "🟢 LIVE", count: live.length },
+          { key: "upcoming", label: "⏳ UPCOMING", count: upcoming.length },
+          { key: "done", label: "✅ DONE", count: done.length },
+        ].map((f) => (
+          <button
+            key={f.key}
+            className={`home-filter-btn ${filter === f.key ? "active" : ""}`}
+            onClick={() => setFilter(f.key)}
+          >
+            {f.label}
+            {f.count != null && f.count > 0 && (
+              <span className="filter-count">{f.count}</span>
+            )}
+          </button>
+        ))}
+      </div>
+
       <div className="screen-pad">
-        {live.length > 0 && (
+        {showLive && live.length > 0 && (
           <div className="section">
             <div className="section-title">🟢 Live Now</div>
             {live.map((m) => (
@@ -73,7 +113,7 @@ export default function HomeScreen({
           </div>
         )}
 
-        {upcoming.length > 0 && (
+        {showUpcoming && upcoming.length > 0 && (
           <div className="section">
             <div className="section-title">⏳ Upcoming</div>
             {upcoming.map((m) => (
@@ -89,7 +129,7 @@ export default function HomeScreen({
           </div>
         )}
 
-        {done.length > 0 && (
+        {showDone && done.length > 0 && (
           <div className="section">
             <div className="section-title">✅ Completed</div>
             {done.map((m) => (
@@ -104,6 +144,14 @@ export default function HomeScreen({
           </div>
         )}
       </div>
+
+      <button
+        className={`scroll-top-fab ${showScrollTop ? "visible" : ""}`}
+        onClick={scrollToTop}
+        aria-label="Scroll to top"
+      >
+        <ChevronUp size={22} />
+      </button>
     </div>
   );
 }

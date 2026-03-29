@@ -107,6 +107,60 @@ body { font-family: 'Nunito', sans-serif; color: var(--text); }
   color: var(--muted); margin-bottom: 10px; text-transform: uppercase;
 }
 
+/* ── HOME FILTER BAR ── */
+.home-filter-bar {
+  display: flex; gap: 6px; padding: 8px 16px 0;
+  position: sticky; top: 48px; z-index: 18;
+  background: var(--bg);
+  overflow-x: auto; scrollbar-width: none;
+}
+.home-filter-bar::-webkit-scrollbar { display: none; }
+.home-filter-btn {
+  flex-shrink: 0;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px; padding: 6px 14px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 11px; font-weight: 800; color: var(--muted);
+  cursor: pointer; transition: all 0.2s ease;
+  display: flex; align-items: center; gap: 5px;
+  white-space: nowrap;
+}
+.home-filter-btn:active { transform: scale(0.96); }
+.home-filter-btn.active {
+  background: linear-gradient(135deg, var(--orange), #ff6a00);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(255,122,0,0.3);
+}
+.filter-count {
+  background: rgba(255,255,255,0.15);
+  border-radius: 10px; padding: 1px 6px;
+  font-size: 10px; font-weight: 900;
+}
+.home-filter-btn.active .filter-count {
+  background: rgba(255,255,255,0.25);
+}
+
+/* ── SCROLL TO TOP FAB ── */
+.scroll-top-fab {
+  position: absolute; bottom: 76px; right: 16px;
+  width: 44px; height: 44px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--orange), #ff6a00);
+  border: none; color: #fff; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 16px rgba(255,122,0,0.35);
+  opacity: 0; transform: translateY(16px) scale(0.8);
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  z-index: 15;
+}
+.scroll-top-fab.visible {
+  opacity: 1; transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+.scroll-top-fab:active { transform: scale(0.9); }
+
 /* MATCH CARD – Glassmorphism */
 .match-card {
   background: var(--glass-bg);
@@ -517,19 +571,38 @@ body { font-family: 'Nunito', sans-serif; color: var(--text); }
 .batter-balls { font-size: 11px; color: var(--muted); font-weight: 700; }
 .batter-sr { font-size: 11px; color: var(--muted); font-weight: 600; }
 
-.live-bowler {
+.live-bowlers {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
-  border-radius: 12px; padding: 12px 14px;
+  border-radius: 12px; padding: 14px;
   box-shadow: var(--glass-shadow);
-  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
 }
-.bowler-label { font-size: 12px; font-weight: 700; color: var(--muted); }
-.bowler-name { font-size: 14px; font-weight: 900; }
-.bowler-stats {
-  margin-left: auto;
-  font-family: 'Bebas Neue'; font-size: 16px; color: var(--sub);
-  letter-spacing: 0.5px;
+.live-bowlers-title {
+  font-size: 9px; font-weight: 900; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px;
+}
+.live-bowlers-header {
+  display: grid; grid-template-columns: 1fr 40px 50px 50px;
+  gap: 4px; padding: 0 0 6px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  margin-bottom: 2px;
+}
+.bwl-h-name, .bwl-h-stat {
+  font-size: 9px; font-weight: 900; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 1px;
+}
+.bwl-h-stat { text-align: right; }
+.live-bowler-row {
+  display: grid; grid-template-columns: 1fr 40px 50px 50px;
+  gap: 4px; align-items: center;
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.live-bowler-row:last-child { border-bottom: none; }
+.bwl-name { font-size: 13px; font-weight: 800; }
+.bwl-stat {
+  font-family: 'Bebas Neue'; font-size: 15px; color: var(--sub);
+  text-align: right; letter-spacing: 0.5px;
 }
 
 /* ── COMPACT PREDICT BUTTONS (switch your pick) ── */
