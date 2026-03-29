@@ -260,7 +260,7 @@ export default function ProfileScreen({
             <div key={h.matchId ?? i} className="hist-item">
               <span className="hist-badge">{h.pickedEmoji ?? "🏏"}</span>
               <div className="hist-info">
-                <div className="hist-match">Match # - {h.matchId}</div>
+                <div className="hist-match">Match {i + 1}</div>
                 <div className="hist-pick">
                   Picked {h.team} at {h.prob}% odds
                 </div>

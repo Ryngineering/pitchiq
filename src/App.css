@@ -423,7 +423,7 @@ body { font-family: 'Nunito', sans-serif; color: var(--text); }
 .match-hero { padding: 16px; }
 .match-hero-label { font-size: 11px; font-weight: 700; color: var(--muted); letter-spacing: 0.5px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
 
-.big-teams { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.big-teams { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; }
 .big-team { display: flex; flex-direction: column; align-items: center; gap: 5px; flex: 1; }
 .big-logo {
   width: 76px; height: 76px; border-radius: 50%;
@@ -450,8 +450,8 @@ body { font-family: 'Nunito', sans-serif; color: var(--text); }
 .big-name { font-family: 'Bebas Neue'; font-size: 26px; letter-spacing: 1px; }
 .big-score { font-size: 14px; font-weight: 800; color: var(--sub); line-height: 1; }
 .big-overs { font-size: 11px; font-weight: 600; color: var(--muted); line-height: 1; margin-top: -3px; }
-.big-vs { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-.big-vs-text { font-family: 'Bebas Neue'; font-size: 15px; color: var(--muted); }
+.big-vs { display: flex; flex-direction: column; align-items: center; gap: 6px; padding-top: 4px; }
+.big-vs-text { font-family: 'Bebas Neue'; font-size: 15px; color: var(--muted); margin-top: 10px; }
 .big-status-badge { align-self: center; }
 
 .prob-section {
