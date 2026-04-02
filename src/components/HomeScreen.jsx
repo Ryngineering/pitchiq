@@ -101,20 +101,17 @@ export default function HomeScreen({
             <div className="education-item">
               <span className="education-icon">⚡</span>
               <div>
-                <strong>Simple rule</strong>
-                <p>
-                  If your pick is hard and you get it right, you get more
-                  points.
-                </p>
+                <strong>Pick the underdog, win big</strong>
+                <p>The harder your pick, the more points you earn.</p>
               </div>
             </div>
             <div className="education-item">
               <span className="education-icon">🔄</span>
               <div>
-                <strong>Change anytime</strong>
+                <strong>Change your mind anytime</strong>
                 <p>
-                  You can change your pick before the match starts. We use your
-                  last pick for scoring.
+                  Switch your pick before the match starts. Only your last pick
+                  counts.
                 </p>
               </div>
             </div>
@@ -123,8 +120,9 @@ export default function HomeScreen({
               <div>
                 <strong>Example</strong>
                 <p>
-                  Team at 30% chance wins: more points. Team at 80% chance wins:
-                  fewer points.
+                  Team A has 30% chance → you get <strong>7 pts</strong>. Team B
+                  has 80% chance → you get <strong>2 pts</strong>. Wrong pick →{" "}
+                  <strong>0 pts</strong>.
                 </p>
               </div>
             </div>

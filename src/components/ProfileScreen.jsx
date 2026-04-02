@@ -267,7 +267,7 @@ export default function ProfileScreen({
             onClick={() => setShowPointsGuide(!showPointsGuide)}
           >
             <span style={{ fontSize: 18 }}>📚</span>
-            <span className="points-guide-title">How Points Calculate</span>
+            <span className="points-guide-title">How Points Work</span>
             <span
               className={`points-guide-chevron ${showPointsGuide ? "open" : ""}`}
             >
@@ -277,25 +277,26 @@ export default function ProfileScreen({
           {showPointsGuide && (
             <div className="points-guide-content">
               <div className="guide-rule">
-                <strong>Rule 1</strong>
-                <p>Hard pick and correct = more points.</p>
-              </div>
-              <div className="guide-rule">
-                <strong>Rule 2</strong>
-                <p>Easy pick and correct = fewer points.</p>
-              </div>
-              <div className="guide-rule">
-                <strong>Rule 3</strong>
+                <strong>The idea</strong>
                 <p>
-                  You can change your pick before match start. We score your
-                  last pick.
+                  Pick the underdog → more points. Pick the favourite → fewer
+                  points.
+                </p>
+              </div>
+              <div className="guide-rule">
+                <strong>Change anytime</strong>
+                <p>
+                  Switch your pick before the match starts. Only your last pick
+                  is scored.
                 </p>
               </div>
               <div className="guide-rule">
                 <strong>Example</strong>
                 <p>
-                  30% team wins = about 7 points. 80% team wins = about 2
-                  points.
+                  Team at <strong>30%</strong> chance wins →{" "}
+                  <strong>7 pts</strong>. Team at <strong>80%</strong> chance
+                  wins → <strong>2 pts</strong>. Wrong pick →{" "}
+                  <strong>0 pts</strong>.
                 </p>
               </div>
             </div>
