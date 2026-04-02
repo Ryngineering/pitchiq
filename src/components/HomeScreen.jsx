@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from "react";
 import MatchCard from "./MatchCard";
 import { Settings, ChevronUp } from "lucide-react";
 
+const POINTS_EDUCATION_SEEN_KEY = "pitchiq-points-education-seen";
+
 function buildDisplayLabel(match, sequence) {
   const base = `Match ${sequence}`;
   return match.leagueName ? `${base} · ${match.leagueName}` : base;
@@ -29,7 +31,7 @@ export default function HomeScreen({
 }) {
   const [filter, setFilter] = useState("all");
   const [showScrollTop, setShowScrollTop] = useState(false);
-  const [showPointsEducation, setShowPointsEducation] = useState(true);
+  const [showPointsEducation, setShowPointsEducation] = useState(false);
   const screenRef = useRef(null);
 
   const live = matches.filter((m) => m.status === "live");
@@ -43,6 +45,26 @@ export default function HomeScreen({
     el.addEventListener("scroll", onScroll, { passive: true });
     return () => el.removeEventListener("scroll", onScroll);
   }, []);
+
+  useEffect(() => {
+    try {
+      const hasSeen = window.localStorage.getItem(POINTS_EDUCATION_SEEN_KEY);
+      if (!hasSeen) {
+        setShowPointsEducation(true);
+      }
+    } catch {
+      setShowPointsEducation(true);
+    }
+  }, []);
+
+  const closePointsEducation = () => {
+    setShowPointsEducation(false);
+    try {
+      window.localStorage.setItem(POINTS_EDUCATION_SEEN_KEY, "1");
+    } catch {
+      // Ignore storage errors and still close modal.
+    }
+  };
 
   const scrollToTop = () => {
     screenRef.current?.scrollTo({ top: 0, behavior: "smooth" });
@@ -69,7 +91,7 @@ export default function HomeScreen({
             <h2>How Points Work 📊</h2>
             <button
               className="points-education-close"
-              onClick={() => setShowPointsEducation(false)}
+              onClick={closePointsEducation}
               aria-label="Close"
             >
               ✕
@@ -79,9 +101,10 @@ export default function HomeScreen({
             <div className="education-item">
               <span className="education-icon">⚡</span>
               <div>
-                <strong>Big Upsets Pay Bigger</strong>
+                <strong>Simple rule</strong>
                 <p>
-                  Easy wins give fewer points. Nailing a risky pick gives more.
+                  If your pick is hard and you get it right, you get more
+                  points.
                 </p>
               </div>
             </div>
@@ -90,26 +113,25 @@ export default function HomeScreen({
               <div>
                 <strong>Change anytime</strong>
                 <p>
-                  You can switch your prediction as many times as you want
-                  before the match starts. We score your final pick.
+                  You can change your pick before the match starts. We use your
+                  last pick for scoring.
                 </p>
               </div>
             </div>
             <div className="education-item">
               <span className="education-icon">🎯</span>
               <div>
-                <strong>Quick Example</strong>
+                <strong>Example</strong>
                 <p>
-                  If your team had a 30% chance and still wins, you can get
-                  around 7 points. If your team had an 80% chance, you get much
-                  less. See Profile for the full guide.
+                  Team at 30% chance wins: more points. Team at 80% chance wins:
+                  fewer points.
                 </p>
               </div>
             </div>
           </div>
           <button
             className="points-education-btn"
-            onClick={() => setShowPointsEducation(false)}
+            onClick={closePointsEducation}
           >
             Got it!
           </button>

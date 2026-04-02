@@ -1624,6 +1624,12 @@ body { font-family: 'Nunito', sans-serif; color: var(--text); }
     padding: 0 32px 22px;
   }
 
+  .points-guide-card {
+    max-width: 760px;
+    margin: 10px auto 16px;
+    width: calc(100% - 64px);
+  }
+
   /* ─── NOTIFICATIONS ─── */
   .notif-panel {
     max-width: 760px;
@@ -1859,7 +1865,7 @@ body { font-family: 'Nunito', sans-serif; color: var(--text); }
   border: 1px solid var(--glass-border);
   border-radius: 14px;
   overflow: hidden;
-  margin: 16px 16px;
+  margin: 10px 16px 16px;
   box-shadow: var(--glass-shadow);
 }
 

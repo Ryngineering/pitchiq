@@ -277,31 +277,26 @@ export default function ProfileScreen({
           {showPointsGuide && (
             <div className="points-guide-content">
               <div className="guide-rule">
-                <strong>The idea</strong>
+                <strong>Rule 1</strong>
+                <p>Hard pick and correct = more points.</p>
+              </div>
+              <div className="guide-rule">
+                <strong>Rule 2</strong>
+                <p>Easy pick and correct = fewer points.</p>
+              </div>
+              <div className="guide-rule">
+                <strong>Rule 3</strong>
                 <p>
-                  Harder calls are worth more. Easy favorite picks are worth
-                  less.
+                  You can change your pick before match start. We score your
+                  last pick.
                 </p>
               </div>
               <div className="guide-rule">
-                <strong>Quick example</strong>
+                <strong>Example</strong>
                 <p>
-                  Back a team with only <strong>30%</strong> win chance and get
-                  it right: about <strong>7 points</strong>. Back a team with
-                  <strong> 80%</strong> win chance and get it right: about
-                  <strong> 2 points</strong>.
+                  30% team wins = about 7 points. 80% team wins = about 2
+                  points.
                 </p>
-              </div>
-              <div className="guide-rule">
-                <strong>Change anytime</strong>
-                <p>
-                  You can <strong>change your prediction anytime</strong> before
-                  the match starts. We always score your latest prediction.
-                </p>
-              </div>
-              <div className="guide-rule">
-                <strong>If you miss the pick</strong>
-                <p>You get 0 points. Only winning predictions earn points.</p>
               </div>
             </div>
           )}
