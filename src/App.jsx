@@ -96,15 +96,172 @@ const GUEST_DEMO_MATCHES = [
     venue: "M Chinnaswamy Stadium, Bengaluru",
     status: "live",
     winner: undefined,
-    t1s: "92/2",
-    t1o: "11.4",
-    t2s: "—",
-    t2o: "",
-    t1p: 61,
-    statistics: [],
-    homeInfoRaw: null,
-    awayInfoRaw: null,
-    currentOver: "11.4",
+    t1s: "184/7",
+    t1o: "20.0",
+    t2s: "96/3",
+    t2o: "11.2",
+    t1p: 54,
+    statistics: [
+      {
+        inningNumber: 1,
+        team: {
+          id: 103,
+          abbreviation: "RCB",
+          inningPartnerships: [
+            {
+              firstPlayer: { name: "Virat Kohli" },
+              secondPlayer: { name: "Rajat Patidar" },
+            },
+          ],
+          inningBatsmen: [
+            {
+              player: { name: "Virat Kohli" },
+              runs: 43,
+              balls: 29,
+              battingStrikeRate: 148.28,
+            },
+            {
+              player: { name: "Rajat Patidar" },
+              runs: 24,
+              balls: 17,
+              battingStrikeRate: 141.17,
+            },
+            {
+              player: { name: "Faf du Plessis" },
+              runs: 16,
+              balls: 12,
+              battingStrikeRate: 133.33,
+            },
+            {
+              player: { name: "Glenn Maxwell" },
+              runs: 6,
+              balls: 4,
+              battingStrikeRate: 150,
+            },
+          ],
+          fallOfWickets: [
+            {
+              dismissalBatsman: { name: "Faf du Plessis" },
+            },
+            {
+              dismissalBatsman: { name: "Glenn Maxwell" },
+            },
+          ],
+          inningBowlers: [
+            {
+              player: { name: "Mitchell Starc" },
+              wickets: 1,
+              concededRuns: 21,
+              overs: 3.0,
+              economy: 7.0,
+            },
+            {
+              player: { name: "Sunil Narine" },
+              wickets: 1,
+              concededRuns: 18,
+              overs: 3.4,
+              economy: 4.91,
+            },
+            {
+              player: { name: "Varun Chakaravarthy" },
+              wickets: 0,
+              concededRuns: 25,
+              overs: 3.0,
+              economy: 8.33,
+            },
+            {
+              player: { name: "Andre Russell" },
+              wickets: 0,
+              concededRuns: 19,
+              overs: 2.0,
+              economy: 9.5,
+            },
+          ],
+        },
+      },
+      {
+        inningNumber: 2,
+        team: {
+          id: 104,
+          abbreviation: "KKR",
+          inningPartnerships: [
+            {
+              firstPlayer: { name: "Shreyas Iyer" },
+              secondPlayer: { name: "Rinku Singh" },
+            },
+          ],
+          inningBatsmen: [
+            {
+              player: { name: "Shreyas Iyer" },
+              runs: 32,
+              balls: 22,
+              battingStrikeRate: 145.45,
+            },
+            {
+              player: { name: "Rinku Singh" },
+              runs: 19,
+              balls: 14,
+              battingStrikeRate: 135.71,
+            },
+            {
+              player: { name: "Sunil Narine" },
+              runs: 21,
+              balls: 11,
+              battingStrikeRate: 190.9,
+            },
+            {
+              player: { name: "Venkatesh Iyer" },
+              runs: 12,
+              balls: 10,
+              battingStrikeRate: 120,
+            },
+            {
+              player: { name: "Andre Russell" },
+              runs: 6,
+              balls: 5,
+              battingStrikeRate: 120,
+            },
+          ],
+          fallOfWickets: [
+            {
+              dismissalBatsman: { name: "Sunil Narine" },
+            },
+            {
+              dismissalBatsman: { name: "Venkatesh Iyer" },
+            },
+            {
+              dismissalBatsman: { name: "Andre Russell" },
+            },
+          ],
+          inningBowlers: [
+            {
+              player: { name: "Mohammed Siraj" },
+              wickets: 1,
+              concededRuns: 24,
+              overs: 3.0,
+              economy: 8.0,
+            },
+            {
+              player: { name: "Karn Sharma" },
+              wickets: 1,
+              concededRuns: 20,
+              overs: 2.2,
+              economy: 8.57,
+            },
+            {
+              player: { name: "Cameron Green" },
+              wickets: 1,
+              concededRuns: 17,
+              overs: 2.0,
+              economy: 8.5,
+            },
+          ],
+        },
+      },
+    ],
+    homeInfoRaw: "RCB 184/7",
+    awayInfoRaw: "T:185",
+    currentOver: "11.2",
   },
   {
     id: 900003,
