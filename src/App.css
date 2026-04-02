@@ -1624,11 +1624,6 @@ body { font-family: 'Nunito', sans-serif; color: var(--text); }
     padding: 0 32px 22px;
   }
 
-  .points-guide-card {
-    max-width: calc(760px - 64px);
-    margin: 10px auto 16px;
-  }
-
   /* ─── NOTIFICATIONS ─── */
   .notif-panel {
     max-width: 760px;
@@ -1971,4 +1966,12 @@ body { font-family: 'Nunito', sans-serif; color: var(--text); }
   text-transform: none;
   letter-spacing: normal;
   font-size: 12px;
+}
+
+/* Desktop override MUST come after base .points-guide-card so cascade wins */
+@media (min-width: 900px) {
+  .points-guide-card {
+    max-width: calc(760px - 64px);
+    margin: 10px auto 16px;
+  }
 }

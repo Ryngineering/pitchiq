@@ -277,26 +277,21 @@ export default function ProfileScreen({
           {showPointsGuide && (
             <div className="points-guide-content">
               <div className="guide-rule">
-                <strong>The idea</strong>
+                <strong>How it works</strong>
                 <p>
-                  Pick the underdog → more points. Pick the favourite → fewer
-                  points.
-                </p>
-              </div>
-              <div className="guide-rule">
-                <strong>Change anytime</strong>
-                <p>
-                  Switch your pick before the match starts. Only your last pick
-                  is scored.
+                  Beat the system's prediction and earn points. The bigger the
+                  upset, the more you score.
                 </p>
               </div>
               <div className="guide-rule">
                 <strong>Example</strong>
                 <p>
-                  Team at <strong>30%</strong> chance wins →{" "}
-                  <strong>7 pts</strong>. Team at <strong>80%</strong> chance
-                  wins → <strong>2 pts</strong>. Wrong pick →{" "}
-                  <strong>0 pts</strong>.
+                  You pick a team with a <strong>40%</strong> chance of winning.
+                  They win — you get <strong>6 pts</strong> because you backed
+                  the underdog when the system gave them only 40%. Pick the 80%
+                  favourite and win? Just <strong>2 pts</strong>. Wrong pick?{" "}
+                  <strong>0 pts</strong>. You can change your pick anytime
+                  before the match starts.
                 </p>
               </div>
             </div>
