@@ -861,9 +861,7 @@ export default function MatchDetail({
                 {!hasPred && (
                   <div className="pred-panel">
                     <div className="pred-panel-title">
-                      {changing
-                        ? "Change Your Prediction"
-                        : "Make Your Prediction"}
+                      {changing ? "Change Your Prediction" : "Tap to predict"}
                     </div>
                     <div className="pred-btns">
                       <button

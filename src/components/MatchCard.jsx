@@ -293,7 +293,7 @@ export default function MatchCard({
       {!pred && !isDone && (
         <div className="pred-strip pred-strip-cta">
           <div className="pred-dot pred-dot-cta" />
-          <span className="pred-text pred-text-cta">Make your prediction</span>
+          <span className="pred-text pred-text-cta">Tap to predict</span>
           <button
             type="button"
             className={`mc-crowd ${isTouchMode ? "touch" : ""} ${isCrowdOpen ? "open" : ""}`}

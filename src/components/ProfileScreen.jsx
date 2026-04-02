@@ -22,6 +22,7 @@ export default function ProfileScreen({
   const [adminError, setAdminError] = useState(null);
   const [approvingUserId, setApprovingUserId] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [showPointsGuide, setShowPointsGuide] = useState(false);
   const settingsRef = useRef(null);
 
   // Close dropdown when clicking outside
@@ -258,6 +259,55 @@ export default function ProfileScreen({
             </div>
             <div className="stat-lbl">Accuracy</div>
           </div>
+        </div>
+
+        <div className="points-guide-card">
+          <button
+            className="points-guide-toggle"
+            onClick={() => setShowPointsGuide(!showPointsGuide)}
+          >
+            <span style={{ fontSize: 18 }}>📚</span>
+            <span className="points-guide-title">How Points Calculate</span>
+            <span
+              className={`points-guide-chevron ${showPointsGuide ? "open" : ""}`}
+            >
+              ›
+            </span>
+          </button>
+          {showPointsGuide && (
+            <div className="points-guide-content">
+              <div className="guide-rule">
+                <strong>Formula:</strong>
+                <code>Points = (Accuracy % ÷ 10)</code>
+              </div>
+              <div className="guide-rule">
+                <strong>Example 1:</strong>
+                <p>
+                  You pick a team at 85% confidence. If you're correct, you earn{" "}
+                  <strong>8 points</strong> (85 ÷ 10 = 8.5, rounded to 8).
+                </p>
+              </div>
+              <div className="guide-rule">
+                <strong>Example 2:</strong>
+                <p>
+                  You pick a team at 52% confidence. If you're correct, you earn{" "}
+                  <strong>5 points</strong> (52 ÷ 10 = 5.2, rounded to 5).
+                </p>
+              </div>
+              <div className="guide-rule">
+                <strong>Key Point:</strong>
+                <p>
+                  You can <strong>change your prediction anytime</strong> before
+                  the match starts. Your points will recalculate based on your
+                  final prediction probability.
+                </p>
+              </div>
+              <div className="guide-rule">
+                <strong>If you lose:</strong>
+                <p>You get 0 points. Only winning predictions earn points.</p>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="section profile-section" style={{ marginBottom: 12 }}>

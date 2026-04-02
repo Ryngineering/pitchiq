@@ -29,6 +29,7 @@ export default function HomeScreen({
 }) {
   const [filter, setFilter] = useState("all");
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [showPointsEducation, setShowPointsEducation] = useState(true);
   const screenRef = useRef(null);
 
   const live = matches.filter((m) => m.status === "live");
@@ -62,6 +63,57 @@ export default function HomeScreen({
 
   return (
     <div className="screen" ref={screenRef}>
+      {showPointsEducation && (
+        <div className="points-education-modal">
+          <div className="points-education-header">
+            <h2>How Points Work 📊</h2>
+            <button
+              className="points-education-close"
+              onClick={() => setShowPointsEducation(false)}
+              aria-label="Close"
+            >
+              ✕
+            </button>
+          </div>
+          <div className="points-education-content">
+            <div className="education-item">
+              <span className="education-icon">⚡</span>
+              <div>
+                <strong>Points = Your Accuracy</strong>
+                <p>
+                  If you predict with 75% confidence and win, you get 7 points.
+                </p>
+              </div>
+            </div>
+            <div className="education-item">
+              <span className="education-icon">🔄</span>
+              <div>
+                <strong>Change anytime</strong>
+                <p>
+                  You can change your prediction before the match starts. Points
+                  recalculate based on your new probability.
+                </p>
+              </div>
+            </div>
+            <div className="education-item">
+              <span className="education-icon">🎯</span>
+              <div>
+                <strong>More accurate = More points</strong>
+                <p>
+                  Higher confidence in correct predictions = higher points.
+                  Learn more in your Profile.
+                </p>
+              </div>
+            </div>
+          </div>
+          <button
+            className="points-education-btn"
+            onClick={() => setShowPointsEducation(false)}
+          >
+            Got it!
+          </button>
+        </div>
+      )}
       <div className="header">
         <span className="header-logo">🏏 PITCHIQ</span>
         <div className="header-right">

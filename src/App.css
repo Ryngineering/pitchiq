@@ -1729,3 +1729,240 @@ body { font-family: 'Nunito', sans-serif; color: var(--text); }
     display: none;
   }
 }
+
+/* ── POINTS EDUCATION MODAL ── */
+.points-education-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 99;
+  background: linear-gradient(160deg, rgba(15, 22, 40, 0.98), rgba(9, 15, 30, 0.95));
+  border: 1px solid rgba(122, 210, 255, 0.25);
+  border-radius: 20px;
+  padding: 24px;
+  width: min(85vw, 320px);
+  max-height: 70vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 40px rgba(122, 210, 255, 0.15);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  animation: educationModalSlideIn 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes educationModalSlideIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -48%) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.points-education-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.points-education-header h2 {
+  margin: 0;
+  font-family: 'Bebas Neue';
+  font-size: 24px;
+  letter-spacing: 1.5px;
+  color: var(--text);
+}
+
+.points-education-close {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.points-education-close:hover {
+  color: var(--text);
+}
+
+.points-education-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.education-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.education-icon {
+  font-size: 28px;
+  flex-shrink: 0;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+.education-item strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.education-item p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--sub);
+  line-height: 1.5;
+  font-weight: 600;
+}
+
+.points-education-btn {
+  width: 100%;
+  background: linear-gradient(135deg, var(--orange), #ff6a00);
+  border: none;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 900;
+  color: #fff;
+  cursor: pointer;
+  font-family: 'Nunito', sans-serif;
+  transition: transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 4px 16px rgba(255, 98, 0, 0.3);
+}
+
+.points-education-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(255, 98, 0, 0.4);
+}
+
+.points-education-btn:active {
+  transform: scale(0.97);
+}
+
+/* ── POINTS GUIDE CARD (Expandable) ── */
+.points-guide-card {
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  overflow: hidden;
+  margin: 16px 0;
+  box-shadow: var(--glass-shadow);
+}
+
+.points-guide-toggle {
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  font-family: 'Nunito', sans-serif;
+  transition: background 0.15s;
+  color: var(--text);
+}
+
+.points-guide-toggle:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.points-guide-toggle:active {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.points-guide-title {
+  font-size: 14px;
+  font-weight: 800;
+  flex: 1;
+  text-align: left;
+}
+
+.points-guide-chevron {
+  display: inline-block;
+  font-size: 22px;
+  color: var(--sub);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  line-height: 1;
+}
+
+.points-guide-chevron.open {
+  transform: rotate(90deg);
+}
+
+.points-guide-content {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 0 16px 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  animation: guideContentFadeIn 0.25s ease;
+}
+
+@keyframes guideContentFadeIn {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 500px;
+  }
+}
+
+.guide-rule {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.guide-rule strong {
+  font-size: 12px;
+  font-weight: 900;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.guide-rule code {
+  background: rgba(255, 183, 0, 0.08);
+  border: 1px solid rgba(255, 183, 0, 0.2);
+  border-radius: 6px;
+  padding: 8px;
+  font-family: 'Monaco', 'Courier New', monospace;
+  font-size: 12px;
+  color: var(--gold);
+  display: block;
+  margin-top: 4px;
+  overflow-x: auto;
+}
+
+.guide-rule p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--sub);
+  line-height: 1.6;
+  font-weight: 600;
+}
+
+.guide-rule p strong {
+  color: var(--text);
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 12px;
+}
