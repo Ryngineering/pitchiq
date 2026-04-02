@@ -70,6 +70,8 @@ function getSeasonNarrative(totalMatches, settledMatches, remainingMatches) {
 export default function LeaderboardScreen({
   currentUserId,
   matches = [],
+  isGuestMode = false,
+  demoRows = [],
   onSettings,
 }) {
   const [rows, setRows] = useState([]);
@@ -77,6 +79,18 @@ export default function LeaderboardScreen({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (isGuestMode) {
+      setRows(demoRows);
+      setRankChanges(
+        demoRows.reduce((acc, row) => {
+          acc[row.id] = 0;
+          return acc;
+        }, {}),
+      );
+      setLoading(false);
+      return undefined;
+    }
+
     let cancelled = false;
 
     fetchLeaderboard(currentUserId).then((data) => {
@@ -99,7 +113,7 @@ export default function LeaderboardScreen({
     return () => {
       cancelled = true;
     };
-  }, [currentUserId]);
+  }, [currentUserId, demoRows, isGuestMode]);
 
   // Podium: show rank 2, 1, 3 for visual layout — requires at least 3 rows
   const byRank = [...rows].sort((a, b) => a.rank - b.rank);

@@ -20,6 +20,189 @@ import "./App.css";
 const INACTIVITY_SIGN_OUT_MS = 30 * 60 * 1000;
 const AI_HELP_ENABLED = import.meta.env.VITE_AI_HELP_ENABLED !== "false";
 
+const GUEST_DEMO_MATCHES = [
+  {
+    id: 900001,
+    t1: "MI",
+    t2: "CSK",
+    t1TeamId: 101,
+    t2TeamId: 102,
+    t1Name: "Mumbai Indians",
+    t2Name: "Chennai Super Kings",
+    t1Logo: null,
+    t2Logo: null,
+    t1Meta: {
+      s: "MI",
+      name: "Mumbai Indians",
+      bg: "#004BA0",
+      fg: "#FFFFFF",
+      logo: null,
+      em: "🦁",
+    },
+    t2Meta: {
+      s: "CSK",
+      name: "Chennai Super Kings",
+      bg: "#FFC300",
+      fg: "#111111",
+      logo: null,
+      em: "🦁",
+    },
+    label: "Demo Match",
+    leagueName: "IPL Demo",
+    startAtTs: Date.now() + 40 * 60 * 1000,
+    date: "Today, 7:30 PM IST",
+    venue: "Wankhede Stadium, Mumbai",
+    status: "upcoming",
+    winner: undefined,
+    t1s: "—",
+    t1o: "",
+    t2s: "—",
+    t2o: "",
+    t1p: 56,
+    statistics: [],
+    homeInfoRaw: null,
+    awayInfoRaw: null,
+  },
+  {
+    id: 900002,
+    t1: "RCB",
+    t2: "KKR",
+    t1TeamId: 103,
+    t2TeamId: 104,
+    t1Name: "Royal Challengers Bengaluru",
+    t2Name: "Kolkata Knight Riders",
+    t1Logo: null,
+    t2Logo: null,
+    t1Meta: {
+      s: "RCB",
+      name: "Royal Challengers Bengaluru",
+      bg: "#D71920",
+      fg: "#FFFFFF",
+      logo: null,
+      em: "🔥",
+    },
+    t2Meta: {
+      s: "KKR",
+      name: "Kolkata Knight Riders",
+      bg: "#3A225D",
+      fg: "#FFFFFF",
+      logo: null,
+      em: "💜",
+    },
+    label: "Demo Match",
+    leagueName: "IPL Demo",
+    startAtTs: Date.now() - 50 * 60 * 1000,
+    date: "Live now",
+    venue: "M Chinnaswamy Stadium, Bengaluru",
+    status: "live",
+    winner: undefined,
+    t1s: "92/2",
+    t1o: "11.4",
+    t2s: "—",
+    t2o: "",
+    t1p: 61,
+    statistics: [],
+    homeInfoRaw: null,
+    awayInfoRaw: null,
+    currentOver: "11.4",
+  },
+  {
+    id: 900003,
+    t1: "SRH",
+    t2: "RR",
+    t1TeamId: 105,
+    t2TeamId: 106,
+    t1Name: "Sunrisers Hyderabad",
+    t2Name: "Rajasthan Royals",
+    t1Logo: null,
+    t2Logo: null,
+    t1Meta: {
+      s: "SRH",
+      name: "Sunrisers Hyderabad",
+      bg: "#F26B1D",
+      fg: "#FFFFFF",
+      logo: null,
+      em: "🌅",
+    },
+    t2Meta: {
+      s: "RR",
+      name: "Rajasthan Royals",
+      bg: "#EA1A85",
+      fg: "#FFFFFF",
+      logo: null,
+      em: "👑",
+    },
+    label: "Demo Match",
+    leagueName: "IPL Demo",
+    startAtTs: Date.now() - 24 * 60 * 60 * 1000,
+    date: "Yesterday",
+    venue: "Rajiv Gandhi Intl Stadium, Hyderabad",
+    status: "completed",
+    winner: "RR",
+    t1s: "171/8",
+    t1o: "20.0",
+    t2s: "172/6",
+    t2o: "19.3",
+    t1p: 48,
+    statistics: [],
+    homeInfoRaw: null,
+    awayInfoRaw: null,
+  },
+];
+
+const GUEST_DEMO_LEADERBOARD = [
+  {
+    id: "demo-1",
+    name: "A. Sharma",
+    av: "AS",
+    pts: 42,
+    correct: 8,
+    total: 12,
+    rank: 1,
+    isMe: false,
+  },
+  {
+    id: "demo-2",
+    name: "R. Mehta",
+    av: "RM",
+    pts: 38,
+    correct: 7,
+    total: 12,
+    rank: 2,
+    isMe: false,
+  },
+  {
+    id: "demo-3",
+    name: "K. Iyer",
+    av: "KI",
+    pts: 35,
+    correct: 7,
+    total: 12,
+    rank: 3,
+    isMe: false,
+  },
+  {
+    id: "demo-4",
+    name: "P. Verma",
+    av: "PV",
+    pts: 31,
+    correct: 6,
+    total: 12,
+    rank: 4,
+    isMe: false,
+  },
+  {
+    id: "demo-5",
+    name: "S. Khan",
+    av: "SK",
+    pts: 28,
+    correct: 5,
+    total: 12,
+    rank: 5,
+    isMe: false,
+  },
+];
+
 function App() {
   const [screen, setScreen] = useState("home");
   const [selectedId, setSelectedId] = useState(null);
@@ -117,6 +300,8 @@ function App() {
       onError: handleAuthError,
       user: approvedUser,
     });
+
+  const visibleMatches = isGuestMode ? GUEST_DEMO_MATCHES : matches;
 
   const handleIdle = useCallback(() => {
     if (!user) {
@@ -236,7 +421,7 @@ function App() {
         throw guestError;
       }
 
-      const activeMatch = matches.find((m) => m.id === matchId);
+      const activeMatch = visibleMatches.find((m) => m.id === matchId);
 
       const { data, error } = await requestAiMatchHelp({ matchId, mode });
 
@@ -305,7 +490,7 @@ function App() {
       showToast("AI Coach insights are ready.", "🧠");
       return normalized;
     },
-    [isGuestMode, matches, showToast, user],
+    [isGuestMode, showToast, user, visibleMatches],
   );
 
   const handleGuestAction = useCallback(
@@ -325,7 +510,7 @@ function App() {
     void login();
   }, [login]);
 
-  const selectedMatch = matches.find((m) => m.id === selectedId);
+  const selectedMatch = visibleMatches.find((m) => m.id === selectedId);
 
   if (!hasSupabaseConfig) {
     return (
@@ -472,7 +657,7 @@ function App() {
 
       {screen === "home" && (
         <HomeScreen
-          matches={matches}
+          matches={visibleMatches}
           predictions={predictions}
           myPoints={myPoints}
           pickCounts={pickCounts}
@@ -504,7 +689,9 @@ function App() {
       {screen === "leaderboard" && (
         <LeaderboardScreen
           currentUserId={isGuestMode ? null : user.id}
-          matches={matches}
+          matches={visibleMatches}
+          isGuestMode={isGuestMode}
+          demoRows={GUEST_DEMO_LEADERBOARD}
           onSettings={() => setScreen("profile")}
         />
       )}
