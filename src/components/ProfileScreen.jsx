@@ -277,33 +277,30 @@ export default function ProfileScreen({
           {showPointsGuide && (
             <div className="points-guide-content">
               <div className="guide-rule">
-                <strong>Formula:</strong>
-                <code>Points = (Accuracy % ÷ 10)</code>
-              </div>
-              <div className="guide-rule">
-                <strong>Example 1:</strong>
+                <strong>The idea</strong>
                 <p>
-                  You pick a team at 85% confidence. If you're correct, you earn{" "}
-                  <strong>8 points</strong> (85 ÷ 10 = 8.5, rounded to 8).
+                  Harder calls are worth more. Easy favorite picks are worth
+                  less.
                 </p>
               </div>
               <div className="guide-rule">
-                <strong>Example 2:</strong>
+                <strong>Quick example</strong>
                 <p>
-                  You pick a team at 52% confidence. If you're correct, you earn{" "}
-                  <strong>5 points</strong> (52 ÷ 10 = 5.2, rounded to 5).
+                  Back a team with only <strong>30%</strong> win chance and get
+                  it right: about <strong>7 points</strong>. Back a team with
+                  <strong> 80%</strong> win chance and get it right: about
+                  <strong> 2 points</strong>.
                 </p>
               </div>
               <div className="guide-rule">
-                <strong>Key Point:</strong>
+                <strong>Change anytime</strong>
                 <p>
                   You can <strong>change your prediction anytime</strong> before
-                  the match starts. Your points will recalculate based on your
-                  final prediction probability.
+                  the match starts. We always score your latest prediction.
                 </p>
               </div>
               <div className="guide-rule">
-                <strong>If you lose:</strong>
+                <strong>If you miss the pick</strong>
                 <p>You get 0 points. Only winning predictions earn points.</p>
               </div>
             </div>

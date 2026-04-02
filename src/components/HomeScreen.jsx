@@ -79,9 +79,9 @@ export default function HomeScreen({
             <div className="education-item">
               <span className="education-icon">⚡</span>
               <div>
-                <strong>Points = Your Accuracy</strong>
+                <strong>Big Upsets Pay Bigger</strong>
                 <p>
-                  If you predict with 75% confidence and win, you get 7 points.
+                  Easy wins give fewer points. Nailing a risky pick gives more.
                 </p>
               </div>
             </div>
@@ -90,18 +90,19 @@ export default function HomeScreen({
               <div>
                 <strong>Change anytime</strong>
                 <p>
-                  You can change your prediction before the match starts. Points
-                  recalculate based on your new probability.
+                  You can switch your prediction as many times as you want
+                  before the match starts. We score your final pick.
                 </p>
               </div>
             </div>
             <div className="education-item">
               <span className="education-icon">🎯</span>
               <div>
-                <strong>More accurate = More points</strong>
+                <strong>Quick Example</strong>
                 <p>
-                  Higher confidence in correct predictions = higher points.
-                  Learn more in your Profile.
+                  If your team had a 30% chance and still wins, you can get
+                  around 7 points. If your team had an 80% chance, you get much
+                  less. See Profile for the full guide.
                 </p>
               </div>
             </div>
