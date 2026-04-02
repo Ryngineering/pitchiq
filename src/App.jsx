@@ -96,14 +96,21 @@ function App() {
     [showToast],
   );
 
-  const { isAuthLoading, login, logout, refreshApprovalStatus, user } =
-    useSupabaseAuth({
-      onError: handleAuthError,
-      onSignedIn: handleSignedIn,
-      onSignedOut: handleSignedOut,
-    });
+  const {
+    continueAsGuest,
+    isAuthLoading,
+    login,
+    logout,
+    refreshApprovalStatus,
+    user,
+  } = useSupabaseAuth({
+    onError: handleAuthError,
+    onSignedIn: handleSignedIn,
+    onSignedOut: handleSignedOut,
+  });
 
-  const approvedUser = user?.isApproved ? user : null;
+  const isGuestMode = Boolean(user?.isGuest);
+  const approvedUser = user?.isApproved && !isGuestMode ? user : null;
 
   const { matches, myPoints, predictions, setPredictions, pickCounts, streak } =
     usePitchData({
@@ -164,6 +171,11 @@ function App() {
   }, [showToast]);
 
   const handlePredict = async (matchId, team, prob, pickedTeamId) => {
+    if (!user || isGuestMode) {
+      showToast("You are in guest mode. Sign in to lock predictions.", "🔐");
+      return;
+    }
+
     // Optimistic update so UI feels instant
     setPredictions((prev) => ({
       ...prev,
@@ -217,6 +229,13 @@ function App() {
 
   const handleRequestAiHelp = useCallback(
     async ({ matchId, mode }) => {
+      if (!user || isGuestMode) {
+        showToast("You are in guest mode. Sign in to use AI Coach.", "🔐");
+        const guestError = new Error("Sign in required for AI Coach.");
+        guestError.code = "AI_HELP_GUEST_MODE";
+        throw guestError;
+      }
+
       const activeMatch = matches.find((m) => m.id === matchId);
 
       const { data, error } = await requestAiMatchHelp({ matchId, mode });
@@ -286,8 +305,25 @@ function App() {
       showToast("AI Coach insights are ready.", "🧠");
       return normalized;
     },
-    [matches, showToast],
+    [isGuestMode, matches, showToast, user],
   );
+
+  const handleGuestAction = useCallback(
+    (action) => {
+      const label =
+        action === "ai"
+          ? "AI Coach"
+          : action === "profile"
+            ? "manage your profile"
+            : "predict";
+      showToast(`You are in guest mode. Sign in to ${label}.`, "🔐");
+    },
+    [showToast],
+  );
+
+  const handleGuestSignIn = useCallback(() => {
+    void login();
+  }, [login]);
 
   const selectedMatch = matches.find((m) => m.id === selectedId);
 
@@ -354,12 +390,12 @@ function App() {
             Offline mode: sign-in requires internet.
           </div>
         )}
-        <LoginScreen onLogin={login} />
+        <LoginScreen onLogin={login} onContinueAsGuest={continueAsGuest} />
       </>
     );
   }
 
-  if (!user.isApproved) {
+  if (!isGuestMode && !user.isApproved) {
     return (
       <div className="app">
         {isOffline && (
@@ -422,6 +458,16 @@ function App() {
           Offline mode: live data may be stale.
         </div>
       )}
+      {isGuestMode && (
+        <div className="guest-banner">
+          <span>
+            Guest mode: sign in to predict, use AI Coach, and sync data.
+          </span>
+          <button className="guest-banner-btn" onClick={handleGuestSignIn}>
+            Sign in
+          </button>
+        </div>
+      )}
       {toast && <Toast msg={toast.msg} emoji={toast.emoji} />}
 
       {screen === "home" && (
@@ -443,11 +489,13 @@ function App() {
       {screen === "match" && selectedMatch && (
         <MatchDetail
           match={selectedMatch}
-          currentUserId={user.id}
+          currentUserId={isGuestMode ? null : user.id}
+          isGuestMode={isGuestMode}
           prediction={predictions[selectedId]}
           onPredict={handlePredict}
           aiHelpEnabled={AI_HELP_ENABLED}
           onRequestAiHelp={handleRequestAiHelp}
+          onRequireSignIn={handleGuestAction}
           onBack={() => setScreen("home")}
           onSignOut={handleLogout}
           onSettings={() => setScreen("profile")}
@@ -455,7 +503,7 @@ function App() {
       )}
       {screen === "leaderboard" && (
         <LeaderboardScreen
-          currentUserId={user.id}
+          currentUserId={isGuestMode ? null : user.id}
           matches={matches}
           onSettings={() => setScreen("profile")}
         />
@@ -463,6 +511,9 @@ function App() {
       {screen === "profile" && (
         <ProfileScreen
           user={user}
+          isGuestMode={isGuestMode}
+          onSignIn={handleGuestSignIn}
+          onRequireSignIn={handleGuestAction}
           onLogout={handleLogout}
           onNavigate={(s) => setScreen(s)}
           predictions={predictions}

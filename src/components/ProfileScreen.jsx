@@ -11,6 +11,9 @@ function getInitials(name) {
 
 export default function ProfileScreen({
   user,
+  isGuestMode = false,
+  onSignIn,
+  onRequireSignIn,
   onLogout,
   onNavigate,
   predictions,
@@ -46,7 +49,7 @@ export default function ProfileScreen({
   const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
 
   useEffect(() => {
-    if (!user.isAdmin) {
+    if (isGuestMode || !user.isAdmin) {
       setPendingUsers([]);
       setAdminError(null);
       return undefined;
@@ -84,7 +87,7 @@ export default function ProfileScreen({
     return () => {
       ignore = true;
     };
-  }, [user.id, user.isAdmin]);
+  }, [isGuestMode, user.id, user.isAdmin]);
 
   const handleApprove = async (pendingUserId) => {
     if (!pendingUserId || approvingUserId) {
@@ -138,6 +141,10 @@ export default function ProfileScreen({
                 className="settings-item"
                 onClick={() => {
                   setShowSettings(false);
+                  if (isGuestMode) {
+                    onSignIn?.();
+                    return;
+                  }
                   onLogout();
                 }}
               >
@@ -155,13 +162,19 @@ export default function ProfileScreen({
                   <polyline points="16 17 21 12 16 7" />
                   <line x1="21" y1="12" x2="9" y2="12" />
                 </svg>
-                Sign out
+                {isGuestMode ? "Sign in" : "Sign out"}
               </button>
             </div>
           )}
         </div>
       </div>
       <div className="screen-pad">
+        {isGuestMode && (
+          <div className="guest-profile-lock">
+            Guest mode: profile features are read-only. Sign in to unlock picks,
+            points, and history sync.
+          </div>
+        )}
         <div className="profile-hero">
           <div className="profile-av">{avatarInitials}</div>
           <div className="profile-name">{user.name}</div>
@@ -170,10 +183,19 @@ export default function ProfileScreen({
             <div className="profile-rank">⚡ {myPoints} pts</div>
           ) : (
             <button
-              className="profile-cta-btn"
-              onClick={() => onNavigate("home")}
+              className={`profile-cta-btn ${isGuestMode ? "disabled" : ""}`}
+              onClick={() => {
+                if (isGuestMode) {
+                  onRequireSignIn?.("predict");
+                  return;
+                }
+                onNavigate("home");
+              }}
+              disabled={isGuestMode}
             >
-              Make your first prediction →
+              {isGuestMode
+                ? "Sign in to make your first prediction"
+                : "Make your first prediction →"}
             </button>
           )}
           <div className="profile-sub profile-sub-google">
@@ -285,7 +307,7 @@ export default function ProfileScreen({
           ))}
         </div>
 
-        {user.isAdmin && (
+        {user.isAdmin && !isGuestMode && (
           <>
             <div
               className="section profile-section"

@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-export default function LoginScreen({ onLogin }) {
+export default function LoginScreen({ onLogin, onContinueAsGuest }) {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleGoogleLogin = async () => {
@@ -10,6 +10,11 @@ export default function LoginScreen({ onLogin }) {
     } catch {
       setIsLoading(false);
     }
+  };
+
+  const handleGuestEntry = () => {
+    if (isLoading) return;
+    onContinueAsGuest?.();
   };
 
   return (
@@ -65,6 +70,14 @@ export default function LoginScreen({ onLogin }) {
           ) : (
             <span>Redirecting to Google…</span>
           )}
+        </button>
+
+        <button
+          className="guest-btn"
+          onClick={handleGuestEntry}
+          disabled={isLoading}
+        >
+          Continue as Guest
         </button>
 
         <div className="login-terms">

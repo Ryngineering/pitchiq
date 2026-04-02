@@ -13,6 +13,18 @@ import {
 
 const AUTH_BOOTSTRAP_TIMEOUT_MS = 8000;
 
+const GUEST_USER = {
+  id: null,
+  name: "Guest",
+  email: "guest@local",
+  avatarUrl: null,
+  initials: "G",
+  isAdmin: false,
+  isApproved: true,
+  isGuest: true,
+  provider: "guest",
+};
+
 function withTimeout(promise, timeoutMs) {
   return Promise.race([
     promise,
@@ -51,6 +63,11 @@ export default function useSupabaseAuth({
 
   const emitError = useCallback((message) => {
     onErrorRef.current?.(message);
+  }, []);
+
+  const continueAsGuest = useCallback(() => {
+    setUser(GUEST_USER);
+    setIsAuthLoading(false);
   }, []);
 
   const hydrateUserWithProfileFlags = useCallback(async (nextUser) => {
@@ -161,11 +178,13 @@ export default function useSupabaseAuth({
           }
         }
 
-        if ((event === "SIGNED_IN" || event === "INITIAL_SESSION") && nextUser) {
+        if (
+          (event === "SIGNED_IN" || event === "INITIAL_SESSION") &&
+          nextUser
+        ) {
           window.setTimeout(() => {
             void refreshUserProfile(nextUser);
           }, 0);
-
         }
 
         if (event === "SIGNED_IN" && nextUser) {
@@ -184,6 +203,9 @@ export default function useSupabaseAuth({
 
   const login = useCallback(async () => {
     try {
+      if (user?.isGuest) {
+        setUser(null);
+      }
       await signInWithGoogle();
     } catch (error) {
       const message =
@@ -194,10 +216,16 @@ export default function useSupabaseAuth({
       emitError(message);
       throw error;
     }
-  }, [emitError]);
+  }, [emitError, user?.isGuest]);
 
   const logout = useCallback(
     async ({ reason = "manual" } = {}) => {
+      if (user?.isGuest) {
+        setUser(null);
+        onSignedOutRef.current?.(reason);
+        return true;
+      }
+
       if (signOutInProgressRef.current) {
         return false;
       }
@@ -219,10 +247,11 @@ export default function useSupabaseAuth({
         return false;
       }
     },
-    [emitError],
+    [emitError, user?.isGuest],
   );
 
   return {
+    continueAsGuest,
     isAuthLoading,
     login,
     logout,

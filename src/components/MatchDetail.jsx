@@ -212,6 +212,7 @@ function extractLiveStats(match) {
 export default function MatchDetail({
   match,
   currentUserId,
+  isGuestMode = false,
   prediction,
   onPredict,
   onBack,
@@ -219,6 +220,7 @@ export default function MatchDetail({
   onSignOut,
   aiHelpEnabled: aiHelpEnabledProp,
   onRequestAiHelp,
+  onRequireSignIn,
 }) {
   const [selected, setSelected] = useState(null);
   const [changing, setChanging] = useState(false);
@@ -278,10 +280,9 @@ export default function MatchDetail({
   );
   const shouldShowAiFab =
     !isDone &&
-    !aiHelpUsed &&
     !aiResultOpen &&
     !aiError &&
-    !(currentUserId && aiCheckingDb);
+    (isGuestMode || (!aiHelpUsed && !(currentUserId && aiCheckingDb)));
 
   const liveStats = useMemo(
     () => (isLive ? extractLiveStats(match) : null),
@@ -346,6 +347,10 @@ export default function MatchDetail({
 
   const handleConfirm = () => {
     if (!selected) return;
+    if (isGuestMode) {
+      onRequireSignIn?.("predict");
+      return;
+    }
     const prob = selected === match.t1 ? match.t1p : t2p;
     const pickedTeamId =
       selected === match.t1 ? match.t1TeamId : match.t2TeamId;
@@ -400,6 +405,11 @@ export default function MatchDetail({
   };
 
   const handleAiFabClick = async () => {
+    if (isGuestMode) {
+      onRequireSignIn?.("ai");
+      return;
+    }
+
     // Already used — show toast-like message
     if (aiHelpUsed) {
       setAiError("AI prediction for this match already generated.");
@@ -465,6 +475,10 @@ export default function MatchDetail({
                   className="settings-item"
                   onClick={() => {
                     setShowSettings(false);
+                    if (isGuestMode) {
+                      onRequireSignIn?.("profile");
+                      return;
+                    }
                     if (onSignOut) {
                       onSignOut();
                       return;
@@ -486,7 +500,7 @@ export default function MatchDetail({
                     <polyline points="16 17 21 12 16 7" />
                     <line x1="21" y1="12" x2="9" y2="12" />
                   </svg>
-                  Sign out
+                  {isGuestMode ? "Sign in" : "Sign out"}
                 </button>
               </div>
             )}
@@ -890,7 +904,11 @@ export default function MatchDetail({
                       onClick={handleConfirm}
                     >
                       <Check size={18} />{" "}
-                      {changing ? "Confirm Change" : "Lock In Prediction"}
+                      {isGuestMode
+                        ? "Sign in to predict"
+                        : changing
+                          ? "Confirm Change"
+                          : "Lock In Prediction"}
                     </button>
 
                     {isLive && (

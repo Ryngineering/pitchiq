@@ -53,6 +53,38 @@ body { font-family: 'Nunito', sans-serif; color: var(--text); }
   border-bottom: 1px solid rgba(0, 0, 0, 0.2);
 }
 
+.guest-banner {
+  position: sticky;
+  top: 0;
+  z-index: 39;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: rgba(18, 28, 56, 0.96);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.25px;
+  padding: 7px 10px;
+  border-bottom: 1px solid rgba(122, 210, 255, 0.22);
+}
+
+.guest-banner-btn {
+  border: 1px solid rgba(122, 210, 255, 0.35);
+  background: rgba(122, 210, 255, 0.14);
+  color: #d8e8ff;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 900;
+  font-family: 'Nunito', sans-serif;
+  cursor: pointer;
+}
+
+.guest-banner-btn:hover { background: rgba(122, 210, 255, 0.2); }
+
 /* SCREEN */
 .screen { flex: 1; overflow-y: auto; scrollbar-width: none; }
 .screen::-webkit-scrollbar { display: none; }
@@ -408,6 +440,26 @@ body { font-family: 'Nunito', sans-serif; color: var(--text); }
 .google-btn:active { transform: scale(0.97); }
 .google-btn:disabled { opacity: 0.7; cursor: wait; transform: none; }
 .google-icon { width: 22px; height: 22px; flex-shrink: 0; }
+
+.guest-btn {
+  width: 100%;
+  max-width: 300px;
+  margin-top: 10px;
+  border: 1px solid rgba(122, 210, 255, 0.35);
+  background: rgba(122, 210, 255, 0.08);
+  color: #dbe9ff;
+  border-radius: 14px;
+  padding: 13px 20px;
+  font-size: 14px;
+  font-weight: 800;
+  font-family: 'Nunito', sans-serif;
+  cursor: pointer;
+  transition: transform 0.15s, background 0.15s;
+}
+
+.guest-btn:hover { transform: translateY(-1px); background: rgba(122, 210, 255, 0.14); }
+.guest-btn:active { transform: scale(0.98); }
+.guest-btn:disabled { opacity: 0.6; cursor: wait; transform: none; }
 
 .login-terms { font-size: 11px; color: var(--muted); text-align: center; margin-top: 20px; font-weight: 600; max-width: 240px; line-height: 1.6; }
 
@@ -1293,6 +1345,23 @@ body { font-family: 'Nunito', sans-serif; color: var(--text); }
   transition: opacity 0.15s;
 }
 .profile-cta-btn:hover { opacity: 0.75; }
+.profile-cta-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.guest-profile-lock {
+  margin: 12px 16px 8px;
+  border: 1px solid rgba(122, 210, 255, 0.24);
+  background: rgba(122, 210, 255, 0.08);
+  border-radius: 12px;
+  padding: 12px 13px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(219, 233, 255, 0.92);
+  font-weight: 700;
+}
 
 /* Muted zero-state stat value */
 .stat-val-muted { font-family: 'Bebas Neue'; font-size: 30px; color: var(--muted); }

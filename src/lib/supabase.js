@@ -566,6 +566,9 @@ export async function approveUser(userId) {
  */
 export async function upsertPrediction({ userId, matchId, pickedTeamId, probabilityAtPick }) {
   if (!supabase) return { data: null, error: new Error("Supabase not configured") };
+  if (!userId || !matchId || !pickedTeamId) {
+    return { data: null, error: new Error("Authenticated user is required") };
+  }
 
   const { data, error } = await supabase
     .from("user_predictions")
@@ -598,7 +601,6 @@ export async function requestAiMatchHelp({ matchId, mode }) {
     };
   }
 
-  const allowAnonFallback = import.meta.env.VITE_AI_HELP_ALLOW_ANON === "true";
   const requestBody = { matchId, mode };
 
   const {
@@ -614,7 +616,17 @@ export async function requestAiMatchHelp({ matchId, mode }) {
       },
     });
 
-  let { data, error } = await invokeWithToken(session?.access_token);
+  if (!session?.access_token) {
+    return {
+      data: null,
+      error: {
+        message: "Authenticated session required",
+        status: 401,
+      },
+    };
+  }
+
+  let { data, error } = await invokeWithToken(session.access_token);
 
   let status = error?.context?.status ?? error?.status;
   if (status === 401) {
@@ -627,14 +639,6 @@ export async function requestAiMatchHelp({ matchId, mode }) {
       error = retry.error;
       status = error?.context?.status ?? error?.status;
     }
-  }
-
-  // Fallback to anon key if JWT fails and anon fallback is enabled
-  if (status === 401 && allowAnonFallback) {
-    const anonRetry = await invokeWithToken(null);
-    data = anonRetry.data;
-    error = anonRetry.error;
-    status = error?.context?.status ?? error?.status;
   }
 
   return {
