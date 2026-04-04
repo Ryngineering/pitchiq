@@ -700,6 +700,60 @@ async function getAccessTokenWithRefresh() {
   return refreshed.session.access_token;
 }
 
+async function normalizeEdgeFunctionError(error) {
+  if (!error) return null;
+
+  const status = error?.context?.status ?? error?.status ?? null;
+  const fallbackMessage =
+    typeof error?.message === "string" && error.message.trim()
+      ? error.message.trim()
+      : "Request failed";
+
+  const context = error?.context;
+  let payload = null;
+  let textBody = null;
+
+  if (context && typeof context === "object" && typeof context.clone === "function") {
+    try {
+      payload = await context.clone().json();
+    } catch {
+      payload = null;
+    }
+
+    if (!payload) {
+      try {
+        textBody = await context.clone().text();
+      } catch {
+        textBody = null;
+      }
+    }
+  }
+
+  if (!payload && context && typeof context === "object" && !("clone" in context)) {
+    payload = context;
+  }
+
+  if (!payload && textBody) {
+    try {
+      payload = JSON.parse(textBody);
+    } catch {
+      // keep textBody as-is
+    }
+  }
+
+  const backendMessage =
+    (payload && typeof payload === "object" && (payload.error || payload.message || payload.msg)) ||
+    (typeof payload === "string" ? payload : null) ||
+    (typeof textBody === "string" && textBody.trim() ? textBody.trim() : null);
+
+  return {
+    message: backendMessage || fallbackMessage,
+    status,
+    details: payload ?? null,
+    raw: error,
+  };
+}
+
 async function invokeEdgeFunction(functionName, { body, requireAuth = false } = {}) {
   if (!supabase) {
     return {
@@ -741,9 +795,11 @@ async function invokeEdgeFunction(functionName, { body, requireAuth = false } = 
     }
   }
 
+  const normalizedError = await normalizeEdgeFunctionError(error);
+
   return {
     data: data ?? null,
-    error: error ?? null,
+    error: normalizedError,
   };
 }
 
