@@ -1,5 +1,8 @@
 import { useState } from "react";
 
+const E164_PHONE_REGEX = /^\+[1-9]\d{1,14}$/;
+const E164_PHONE_ERROR = "Use E.164 format (example: +14155552671).";
+
 export default function LoginScreen({
   onLogin,
   onContinueAsGuest,
@@ -12,8 +15,14 @@ export default function LoginScreen({
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState(null);
+  const [phoneTouched, setPhoneTouched] = useState(false);
 
   const isBusy = isLoading || isPhoneLoading;
+  const normalizedPhone = phone.trim().replace(/[\s()-]/g, "");
+  const phoneFormatError =
+    phoneTouched && normalizedPhone && !E164_PHONE_REGEX.test(normalizedPhone)
+      ? E164_PHONE_ERROR
+      : null;
 
   const handleGoogleLogin = async () => {
     try {
@@ -26,8 +35,14 @@ export default function LoginScreen({
   };
 
   const handlePhoneSignIn = async () => {
+    setPhoneTouched(true);
+
     if (!phone.trim() || !password) {
       setErrorMessage("Enter phone number and password.");
+      return;
+    }
+
+    if (!E164_PHONE_REGEX.test(normalizedPhone)) {
       return;
     }
 
@@ -160,15 +175,23 @@ export default function LoginScreen({
                 Enter your phone number and password to continue.
               </div>
               <div className="login-auth-card">
-                <input
-                  className="login-auth-input"
-                  type="tel"
-                  autoComplete="tel"
-                  placeholder="Phone number (example: +14155552671)"
-                  value={phone}
-                  onChange={(event) => setPhone(event.target.value)}
-                  disabled={isBusy}
-                />
+                <div className="login-input-row">
+                  <input
+                    className={`login-auth-input ${phoneFormatError ? "login-auth-input-error" : ""}`}
+                    type="tel"
+                    autoComplete="tel"
+                    placeholder="Phone number (example: +14155552671)"
+                    value={phone}
+                    onChange={(event) => setPhone(event.target.value)}
+                    onBlur={() => setPhoneTouched(true)}
+                    disabled={isBusy}
+                  />
+                  {phoneFormatError && (
+                    <div className="login-input-inline-error">
+                      {phoneFormatError}
+                    </div>
+                  )}
+                </div>
                 <input
                   className="login-auth-input"
                   type="password"

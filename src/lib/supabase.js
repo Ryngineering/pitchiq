@@ -21,7 +21,7 @@ export const supabase = hasSupabaseConfig
 const AUTH_INTENT_KEY = "pitchiq-auth-intent";
 const E164_PHONE_REGEX = /^\+[1-9]\d{1,14}$/;
 const E164_PHONE_ERROR =
-  "Phone number must begin with +<country code> (for example: +14155552671).";
+  "Phone number must begin with +<country code> (for example: +919742213892).";
 const TEAM_CACHE_KEY = "pitchiq-team-cache-v2";
 const TEAM_CACHE_TTL_MS = 4 * 60 * 60 * 1000;
 const LIVE_STATUSES = new Set([

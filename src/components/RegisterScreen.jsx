@@ -1,5 +1,8 @@
 import { useState } from "react";
 
+const E164_PHONE_REGEX = /^\+[1-9]\d{1,14}$/;
+const E164_PHONE_ERROR = "Use E.164 format (example: +14155552671).";
+
 export default function RegisterScreen({ onRegister, onGoToSignIn }) {
   const [isRegistering, setIsRegistering] = useState(false);
   const [phone, setPhone] = useState("");
@@ -8,8 +11,17 @@ export default function RegisterScreen({ onRegister, onGoToSignIn }) {
   const [lastName, setLastName] = useState("");
   const [inviteCode, setInviteCode] = useState("");
   const [errorMessage, setErrorMessage] = useState(null);
+  const [phoneTouched, setPhoneTouched] = useState(false);
+
+  const normalizedPhone = phone.trim().replace(/[\s()-]/g, "");
+  const phoneFormatError =
+    phoneTouched && normalizedPhone && !E164_PHONE_REGEX.test(normalizedPhone)
+      ? E164_PHONE_ERROR
+      : null;
 
   const handleRegister = async () => {
+    setPhoneTouched(true);
+
     if (
       !phone.trim() ||
       !password ||
@@ -18,6 +30,10 @@ export default function RegisterScreen({ onRegister, onGoToSignIn }) {
       !inviteCode.trim()
     ) {
       setErrorMessage("All registration fields are required.");
+      return;
+    }
+
+    if (!E164_PHONE_REGEX.test(normalizedPhone)) {
       return;
     }
 
@@ -71,15 +87,21 @@ export default function RegisterScreen({ onRegister, onGoToSignIn }) {
         </div>
 
         <div className="register-auth-card">
-          <input
-            className="login-auth-input"
-            type="tel"
-            autoComplete="tel"
-            placeholder="Phone number (example: +14155552671)"
-            value={phone}
-            onChange={(event) => setPhone(event.target.value)}
-            disabled={isRegistering}
-          />
+          <div className="login-input-row">
+            <input
+              className={`login-auth-input ${phoneFormatError ? "login-auth-input-error" : ""}`}
+              type="tel"
+              autoComplete="tel"
+              placeholder="Phone number (example: +14155552671)"
+              value={phone}
+              onChange={(event) => setPhone(event.target.value)}
+              onBlur={() => setPhoneTouched(true)}
+              disabled={isRegistering}
+            />
+            {phoneFormatError && (
+              <div className="login-input-inline-error">{phoneFormatError}</div>
+            )}
+          </div>
           <input
             className="login-auth-input"
             type="password"

@@ -523,6 +523,27 @@ body { font-family: 'Nunito', sans-serif; color: var(--text); }
   color: var(--muted);
 }
 
+.login-input-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(120px, 140px);
+  align-items: center;
+  gap: 8px;
+}
+
+.login-auth-input-error {
+  border-color: rgba(255, 71, 87, 0.95);
+  box-shadow: 0 0 0 1px rgba(255, 71, 87, 0.35);
+}
+
+.login-input-inline-error {
+  color: #ff9fa8;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.25;
+  text-align: left;
+}
+
 .phone-btn {
   width: 100%;
   border: none;
