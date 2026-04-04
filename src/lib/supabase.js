@@ -687,14 +687,19 @@ async function getAccessTokenWithRefresh() {
     data: { session },
   } = await supabase.auth.getSession();
 
-  if (session?.access_token) {
+  // Always try a proactive refresh when the token is within 60 s of expiry.
+  const expiresAt = session?.expires_at ?? 0;
+  const isExpiringSoon = expiresAt - Date.now() / 1000 < 60;
+
+  if (session?.access_token && !isExpiringSoon) {
     return session.access_token;
   }
 
   const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
 
   if (refreshError || !refreshed?.session?.access_token) {
-    return null;
+    // Fall back to whatever we have if refresh fails but a token exists.
+    return session?.access_token ?? null;
   }
 
   return refreshed.session.access_token;
@@ -762,39 +767,23 @@ async function invokeEdgeFunction(functionName, { body, requireAuth = false } = 
     };
   }
 
-  const token = requireAuth ? await getAccessTokenWithRefresh() : null;
-
-  if (requireAuth && !token) {
-    return {
-      data: null,
-      error: {
-        message: "Authenticated session required",
-        status: 401,
-      },
-    };
-  }
-
-  const invoke = async (accessToken) =>
-    supabase.functions.invoke(functionName, {
-      body,
-      headers: {
-        apikey: supabasePublishableKey,
-        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-      },
-    });
-
-  let { data, error } = await invoke(token);
-  let status = error?.context?.status ?? error?.status;
-
-  if (status === 401 && requireAuth) {
-    const retryToken = await getAccessTokenWithRefresh();
-    if (retryToken) {
-      const retried = await invoke(retryToken);
-      data = retried.data;
-      error = retried.error;
+  if (requireAuth) {
+    const token = await getAccessTokenWithRefresh();
+    if (!token) {
+      return {
+        data: null,
+        error: {
+          message: "No active session. Please sign in.",
+          status: 401,
+        },
+      };
     }
+    // Explicitly tell the SDK which token to use so that platform-level JWT
+    // verification and the function code both receive the correct Bearer token.
+    supabase.functions.setAuth(token);
   }
 
+  const { data, error } = await supabase.functions.invoke(functionName, { body });
   const normalizedError = await normalizeEdgeFunctionError(error);
 
   return {
