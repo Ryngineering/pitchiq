@@ -19,6 +19,9 @@ export const supabase = hasSupabaseConfig
   : null;
 
 const AUTH_INTENT_KEY = "pitchiq-auth-intent";
+const E164_PHONE_REGEX = /^\+[1-9]\d{1,14}$/;
+const E164_PHONE_ERROR =
+  "Phone number must be in E.164 format (for example: +14155552671).";
 const TEAM_CACHE_KEY = "pitchiq-team-cache-v2";
 const TEAM_CACHE_TTL_MS = 4 * 60 * 60 * 1000;
 const LIVE_STATUSES = new Set([
@@ -413,7 +416,12 @@ export async function signInWithGoogle() {
 }
 
 function normalizePhoneNumber(phone) {
-  return String(phone ?? "").replace(/[^\d+]/g, "").trim();
+  // Keep leading + and digits, removing common formatting characters.
+  return String(phone ?? "").trim().replace(/[\s()-]/g, "");
+}
+
+function isE164PhoneNumber(phone) {
+  return E164_PHONE_REGEX.test(phone);
 }
 
 export async function signInWithPhonePassword({ phone, password }) {
@@ -425,6 +433,10 @@ export async function signInWithPhonePassword({ phone, password }) {
 
   if (!normalizedPhone || !password) {
     throw new Error("Phone number and password are required.");
+  }
+
+  if (!isE164PhoneNumber(normalizedPhone)) {
+    throw new Error(E164_PHONE_ERROR);
   }
 
   sessionStorage.setItem(AUTH_INTENT_KEY, "phone");
@@ -800,6 +812,16 @@ export async function submitPhoneRegistration({
   inviteCode,
 }) {
   const normalizedPhone = normalizePhoneNumber(phone);
+
+  if (!isE164PhoneNumber(normalizedPhone)) {
+    return {
+      data: null,
+      error: {
+        message: E164_PHONE_ERROR,
+        status: 400,
+      },
+    };
+  }
 
   return invokeEdgeFunction("register-phone-user", {
     body: {
