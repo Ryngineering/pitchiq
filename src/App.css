@@ -525,10 +525,7 @@ body { font-family: 'Nunito', sans-serif; color: var(--text); }
 
 .login-input-row {
   width: 100%;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(120px, 140px);
-  align-items: center;
-  gap: 8px;
+  position: relative;
 }
 
 .login-auth-input-error {
@@ -537,11 +534,25 @@ body { font-family: 'Nunito', sans-serif; color: var(--text); }
 }
 
 .login-input-inline-error {
+  position: absolute;
+  left: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 140px;
   color: #ff9fa8;
   font-size: 11px;
   font-weight: 800;
   line-height: 1.25;
   text-align: left;
+}
+
+@media (max-width: 560px) {
+  .login-input-inline-error {
+    position: static;
+    transform: none;
+    width: auto;
+    margin-top: 6px;
+  }
 }
 
 .phone-btn {
