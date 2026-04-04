@@ -1,7 +1,8 @@
 import { useState } from "react";
 
 const E164_PHONE_REGEX = /^\+[1-9]\d{1,14}$/;
-const E164_PHONE_ERROR = "Use E.164 format (example: +14155552671).";
+const E164_PHONE_ERROR =
+  "Phone number must begin with +<country code> (for example: +919742213892).";
 
 export default function LoginScreen({
   onLogin,
