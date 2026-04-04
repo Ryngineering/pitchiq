@@ -1,12 +1,39 @@
 import { useEffect, useRef, useState } from "react";
 import { Settings } from "lucide-react";
-import { approveUser, fetchPendingUsers } from "../lib/supabase";
+import {
+  approveUser,
+  fetchPendingUsers,
+  fetchPhoneRegistrationConfig,
+  updatePhoneRegistrationConfig,
+} from "../lib/supabase";
 
 function getInitials(name) {
   if (!name || typeof name !== "string") return "U";
   const parts = name.trim().split(/\s+/).filter(Boolean).slice(0, 2);
   if (!parts.length) return "U";
   return parts.map((part) => part[0].toUpperCase()).join("");
+}
+
+function toDateTimeLocalValue(value) {
+  if (!value) return "";
+
+  const dt = new Date(value);
+  if (Number.isNaN(dt.getTime())) return "";
+
+  const year = dt.getFullYear();
+  const month = String(dt.getMonth() + 1).padStart(2, "0");
+  const day = String(dt.getDate()).padStart(2, "0");
+  const hours = String(dt.getHours()).padStart(2, "0");
+  const minutes = String(dt.getMinutes()).padStart(2, "0");
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+function toIsoStringOrNull(value) {
+  if (!value) return null;
+
+  const dt = new Date(value);
+  if (Number.isNaN(dt.getTime())) return null;
+  return dt.toISOString();
 }
 
 export default function ProfileScreen({
@@ -19,6 +46,19 @@ export default function ProfileScreen({
   predictions,
   myPoints,
 }) {
+  const [registrationConfig, setRegistrationConfig] = useState({
+    enabled: false,
+    windowStart: "",
+    windowEnd: "",
+    inviteCode: "",
+  });
+  const [isLoadingRegistrationConfig, setIsLoadingRegistrationConfig] =
+    useState(false);
+  const [isSavingRegistrationConfig, setIsSavingRegistrationConfig] =
+    useState(false);
+  const [registrationConfigError, setRegistrationConfigError] = useState(null);
+  const [registrationConfigSuccess, setRegistrationConfigSuccess] =
+    useState(null);
   const [adminError, setAdminError] = useState(null);
   const [approvingUserId, setApprovingUserId] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
@@ -89,6 +129,74 @@ export default function ProfileScreen({
       ignore = true;
     };
   }, [isGuestMode, user.id, user.isAdmin]);
+
+  useEffect(() => {
+    if (isGuestMode || !user.isAdmin) {
+      return;
+    }
+
+    let ignore = false;
+
+    const loadRegistrationConfig = async () => {
+      setIsLoadingRegistrationConfig(true);
+      setRegistrationConfigError(null);
+
+      const { data, error } = await fetchPhoneRegistrationConfig();
+
+      if (ignore) {
+        return;
+      }
+
+      if (error || !data) {
+        setRegistrationConfigError("Unable to load registration controls.");
+        setIsLoadingRegistrationConfig(false);
+        return;
+      }
+
+      setRegistrationConfig({
+        enabled: Boolean(data.enabled),
+        windowStart: toDateTimeLocalValue(data.windowStart),
+        windowEnd: toDateTimeLocalValue(data.windowEnd),
+        inviteCode: "",
+      });
+      setIsLoadingRegistrationConfig(false);
+    };
+
+    void loadRegistrationConfig();
+
+    return () => {
+      ignore = true;
+    };
+  }, [isGuestMode, user.isAdmin]);
+
+  const handleSaveRegistrationConfig = async () => {
+    setRegistrationConfigError(null);
+    setRegistrationConfigSuccess(null);
+    setIsSavingRegistrationConfig(true);
+
+    const { data, error } = await updatePhoneRegistrationConfig({
+      enabled: registrationConfig.enabled,
+      windowStart: toIsoStringOrNull(registrationConfig.windowStart),
+      windowEnd: toIsoStringOrNull(registrationConfig.windowEnd),
+      inviteCode: registrationConfig.inviteCode || null,
+    });
+
+    if (error || !data) {
+      setRegistrationConfigError("Unable to save registration controls.");
+      setIsSavingRegistrationConfig(false);
+      return;
+    }
+
+    setRegistrationConfig((prev) => ({
+      ...prev,
+      enabled: Boolean(data.enabled),
+      windowStart: toDateTimeLocalValue(data.windowStart),
+      windowEnd: toDateTimeLocalValue(data.windowEnd),
+      inviteCode: "",
+    }));
+    setRegistrationConfigSuccess("Registration settings saved.");
+    setIsSavingRegistrationConfig(false);
+  };
 
   const handleApprove = async (pendingUserId) => {
     if (!pendingUserId || approvingUserId) {
@@ -351,6 +459,152 @@ export default function ProfileScreen({
               className="section profile-section"
               style={{ marginBottom: 12 }}
             >
+              <div className="section-title">
+                ⚙️ Phone Registration Controls
+              </div>
+            </div>
+
+            <div className="hist-list" style={{ marginBottom: 12 }}>
+              {registrationConfigError && (
+                <div
+                  style={{
+                    background: "rgba(255, 71, 87, 0.08)",
+                    border: "1px solid rgba(255, 71, 87, 0.2)",
+                    borderRadius: 14,
+                    color: "var(--sub)",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    marginBottom: 8,
+                    padding: "14px 16px",
+                  }}
+                >
+                  {registrationConfigError}
+                </div>
+              )}
+
+              {registrationConfigSuccess && (
+                <div
+                  style={{
+                    background: "rgba(0, 208, 132, 0.08)",
+                    border: "1px solid rgba(0, 208, 132, 0.2)",
+                    borderRadius: 14,
+                    color: "var(--sub)",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    marginBottom: 8,
+                    padding: "14px 16px",
+                  }}
+                >
+                  {registrationConfigSuccess}
+                </div>
+              )}
+
+              {isLoadingRegistrationConfig ? (
+                <div
+                  style={{
+                    textAlign: "center",
+                    padding: "16px 0",
+                    color: "var(--muted)",
+                    fontWeight: 700,
+                    fontSize: 13,
+                  }}
+                >
+                  Loading registration controls...
+                </div>
+              ) : (
+                <div
+                  style={{
+                    display: "grid",
+                    gap: 10,
+                    padding: "10px 0 14px",
+                  }}
+                >
+                  <label
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      color: "var(--sub)",
+                      fontWeight: 800,
+                      fontSize: 13,
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={registrationConfig.enabled}
+                      onChange={(event) => {
+                        setRegistrationConfig((prev) => ({
+                          ...prev,
+                          enabled: event.target.checked,
+                        }));
+                        setRegistrationConfigSuccess(null);
+                      }}
+                      disabled={isSavingRegistrationConfig}
+                    />
+                    Enable phone registration
+                  </label>
+
+                  <input
+                    className="login-auth-input"
+                    type="datetime-local"
+                    value={registrationConfig.windowStart}
+                    onChange={(event) => {
+                      setRegistrationConfig((prev) => ({
+                        ...prev,
+                        windowStart: event.target.value,
+                      }));
+                      setRegistrationConfigSuccess(null);
+                    }}
+                    disabled={isSavingRegistrationConfig}
+                  />
+                  <input
+                    className="login-auth-input"
+                    type="datetime-local"
+                    value={registrationConfig.windowEnd}
+                    onChange={(event) => {
+                      setRegistrationConfig((prev) => ({
+                        ...prev,
+                        windowEnd: event.target.value,
+                      }));
+                      setRegistrationConfigSuccess(null);
+                    }}
+                    disabled={isSavingRegistrationConfig}
+                  />
+
+                  <input
+                    className="login-auth-input"
+                    type="text"
+                    placeholder="Set/rotate shared invite code"
+                    value={registrationConfig.inviteCode}
+                    onChange={(event) => {
+                      setRegistrationConfig((prev) => ({
+                        ...prev,
+                        inviteCode: event.target.value,
+                      }));
+                      setRegistrationConfigSuccess(null);
+                    }}
+                    disabled={isSavingRegistrationConfig}
+                  />
+
+                  <button
+                    className="confirm-btn"
+                    onClick={() => {
+                      void handleSaveRegistrationConfig();
+                    }}
+                    disabled={isSavingRegistrationConfig}
+                  >
+                    {isSavingRegistrationConfig
+                      ? "Saving..."
+                      : "Save registration settings"}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div
+              className="section profile-section"
+              style={{ marginBottom: 12 }}
+            >
               <div className="section-title">🛡️ Pending Approvals</div>
             </div>
 
@@ -405,7 +659,9 @@ export default function ProfileScreen({
                   <span className="hist-badge">⏳</span>
                   <div className="hist-info">
                     <div className="hist-match">{pendingUser.name}</div>
-                    <div className="hist-pick">{pendingUser.email}</div>
+                    <div className="hist-pick">
+                      {pendingUser.phoneNumber || pendingUser.email}
+                    </div>
                   </div>
                   <div className="hist-right" style={{ minWidth: 108 }}>
                     <button

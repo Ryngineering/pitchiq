@@ -311,9 +311,12 @@ export function mapAuthUser(authUser) {
   if (!authUser) return null;
 
   const metadata = authUser.user_metadata ?? {};
+  const phone = authUser.phone || metadata.phone || null;
+  const emailOrPhone = authUser.email || phone || "No identity available";
   const name =
     metadata.full_name ||
     metadata.name ||
+    (phone ? `User ${phone.slice(-4)}` : null) ||
     authUser.email?.split("@")[0] ||
     "Player";
   const provider = authUser.app_metadata?.provider || "sso";
@@ -321,7 +324,8 @@ export function mapAuthUser(authUser) {
   return {
     id: authUser.id,
     name,
-    email: authUser.email || "No email available",
+    email: emailOrPhone,
+    phone,
     avatarUrl: metadata.avatar_url || null,
     initials: getInitials(name),
     isAdmin: false,
@@ -398,6 +402,36 @@ export async function signInWithGoogle() {
         prompt: "consent",
       },
     },
+  });
+
+  if (error) {
+    sessionStorage.removeItem(AUTH_INTENT_KEY);
+    throw error;
+  }
+
+  return data;
+}
+
+function normalizePhoneNumber(phone) {
+  return String(phone ?? "").replace(/[^\d+]/g, "").trim();
+}
+
+export async function signInWithPhonePassword({ phone, password }) {
+  if (!supabase) {
+    throw new Error("Supabase Auth is not configured.");
+  }
+
+  const normalizedPhone = normalizePhoneNumber(phone);
+
+  if (!normalizedPhone || !password) {
+    throw new Error("Phone number and password are required.");
+  }
+
+  sessionStorage.setItem(AUTH_INTENT_KEY, "phone");
+
+  const { data, error } = await supabase.auth.signInWithPassword({
+    phone: normalizedPhone,
+    password,
   });
 
   if (error) {
@@ -510,7 +544,7 @@ export async function fetchPendingUsers() {
 
   const { data, error } = await supabase
     .from("user_profile")
-    .select("id, display_name, email, avatar_url, created_at")
+    .select("id, display_name, email, phone_number, avatar_url, created_at")
     .eq("is_approved", false)
     .order("created_at", { ascending: true });
 
@@ -523,6 +557,7 @@ export async function fetchPendingUsers() {
     avatarUrl: row.avatar_url ?? null,
     createdAt: row.created_at ?? null,
     email: row.email ?? "No email available",
+    phoneNumber: row.phone_number ?? null,
     id: row.id,
     name: row.display_name || row.email?.split("@")[0] || "Player",
   }));
@@ -645,6 +680,117 @@ export async function requestAiMatchHelp({ matchId, mode }) {
     data: data ?? null,
     error: error ?? null,
   };
+}
+
+async function getAccessTokenWithRefresh() {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (session?.access_token) {
+    return session.access_token;
+  }
+
+  const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
+
+  if (refreshError || !refreshed?.session?.access_token) {
+    return null;
+  }
+
+  return refreshed.session.access_token;
+}
+
+async function invokeEdgeFunction(functionName, { body, requireAuth = false } = {}) {
+  if (!supabase) {
+    return {
+      data: null,
+      error: new Error("Supabase not configured"),
+    };
+  }
+
+  const token = requireAuth ? await getAccessTokenWithRefresh() : null;
+
+  if (requireAuth && !token) {
+    return {
+      data: null,
+      error: {
+        message: "Authenticated session required",
+        status: 401,
+      },
+    };
+  }
+
+  const invoke = async (accessToken) =>
+    supabase.functions.invoke(functionName, {
+      body,
+      headers: {
+        apikey: supabasePublishableKey,
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+      },
+    });
+
+  let { data, error } = await invoke(token);
+  let status = error?.context?.status ?? error?.status;
+
+  if (status === 401 && requireAuth) {
+    const retryToken = await getAccessTokenWithRefresh();
+    if (retryToken) {
+      const retried = await invoke(retryToken);
+      data = retried.data;
+      error = retried.error;
+    }
+  }
+
+  return {
+    data: data ?? null,
+    error: error ?? null,
+  };
+}
+
+export async function submitPhoneRegistration({
+  phone,
+  password,
+  firstName,
+  lastName,
+  inviteCode,
+}) {
+  const normalizedPhone = normalizePhoneNumber(phone);
+
+  return invokeEdgeFunction("register-phone-user", {
+    body: {
+      phone: normalizedPhone,
+      password,
+      firstName,
+      lastName,
+      inviteCode,
+    },
+    requireAuth: false,
+  });
+}
+
+export async function fetchPhoneRegistrationConfig() {
+  return invokeEdgeFunction("admin-registration-config", {
+    body: { action: "get" },
+    requireAuth: true,
+  });
+}
+
+export async function updatePhoneRegistrationConfig({
+  enabled,
+  windowStart,
+  windowEnd,
+  inviteCode,
+}) {
+  return invokeEdgeFunction("admin-registration-config", {
+    body: {
+      action: "update",
+      enabled,
+      windowStart,
+      windowEnd,
+      inviteCode,
+    },
+    requireAuth: true,
+  });
 }
 
 /**

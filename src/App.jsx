@@ -9,6 +9,8 @@ import ProfileScreen from "./components/ProfileScreen";
 import MatchDetail from "./components/MatchDetail";
 import BottomNav from "./components/BottomNav";
 import {
+  signInWithPhonePassword,
+  submitPhoneRegistration,
   hasSupabaseConfig,
   requestAiMatchHelp,
   upsertPrediction,
@@ -364,6 +366,7 @@ function App() {
   const [screen, setScreen] = useState("home");
   const [selectedId, setSelectedId] = useState(null);
   const [toast, setToast] = useState(null);
+  const [registerMode, setRegisterMode] = useState(false);
   const [isRefreshingApproval, setIsRefreshingApproval] = useState(false);
   const [isOffline, setIsOffline] = useState(
     typeof navigator !== "undefined" ? !navigator.onLine : false,
@@ -385,6 +388,18 @@ function App() {
         window.clearTimeout(toastTimeoutRef.current);
       }
     };
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const registerParam = params.get("register");
+    const registerPath = window.location.pathname
+      .toLowerCase()
+      .includes("register");
+
+    if (registerPath || registerParam === "1") {
+      setRegisterMode(true);
+    }
   }, []);
 
   useEffect(() => {
@@ -667,6 +682,35 @@ function App() {
     void login();
   }, [login]);
 
+  const handlePhoneSignIn = useCallback(async ({ phone, password }) => {
+    await signInWithPhonePassword({ phone, password });
+  }, []);
+
+  const handlePhoneRegister = useCallback(
+    async ({ phone, password, firstName, lastName, inviteCode }) => {
+      const response = await submitPhoneRegistration({
+        phone,
+        password,
+        firstName,
+        lastName,
+        inviteCode,
+      });
+
+      if (!response.error) {
+        setRegisterMode(false);
+        const nextUrl = `${window.location.pathname}`;
+        window.history.replaceState({}, document.title, nextUrl);
+        showToast(
+          "Registration submitted. Sign in after admin approval.",
+          "✅",
+        );
+      }
+
+      return response;
+    },
+    [showToast],
+  );
+
   const selectedMatch = visibleMatches.find((m) => m.id === selectedId);
 
   if (!hasSupabaseConfig) {
@@ -732,7 +776,13 @@ function App() {
             Offline mode: sign-in requires internet.
           </div>
         )}
-        <LoginScreen onLogin={login} onContinueAsGuest={continueAsGuest} />
+        <LoginScreen
+          onLogin={login}
+          onContinueAsGuest={continueAsGuest}
+          onPhoneSignIn={handlePhoneSignIn}
+          onPhoneRegister={handlePhoneRegister}
+          registerMode={registerMode}
+        />
       </>
     );
   }
