@@ -1,37 +1,19 @@
-import { useEffect, useState } from "react";
-
-const MODE_LOGIN = "login";
-const MODE_REGISTER = "register";
+import { useState } from "react";
 
 export default function LoginScreen({
   onLogin,
   onContinueAsGuest,
   onPhoneSignIn,
-  onPhoneRegister,
-  registerMode = false,
+  onOpenRegister,
 }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isPhoneLoading, setIsPhoneLoading] = useState(false);
-  const [isRegisterLoading, setIsRegisterLoading] = useState(false);
-  const [isPhoneAuthOpen, setIsPhoneAuthOpen] = useState(registerMode);
-  const [authMode, setAuthMode] = useState(
-    registerMode ? MODE_REGISTER : MODE_LOGIN,
-  );
+  const [isPhoneAuthOpen, setIsPhoneAuthOpen] = useState(false);
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [inviteCode, setInviteCode] = useState("");
   const [errorMessage, setErrorMessage] = useState(null);
 
-  const isBusy = isLoading || isPhoneLoading || isRegisterLoading;
-
-  useEffect(() => {
-    if (registerMode) {
-      setIsPhoneAuthOpen(true);
-      setAuthMode(MODE_REGISTER);
-    }
-  }, [registerMode]);
+  const isBusy = isLoading || isPhoneLoading;
 
   const handleGoogleLogin = async () => {
     try {
@@ -60,54 +42,6 @@ export default function LoginScreen({
     }
   };
 
-  const handleRegister = async () => {
-    if (
-      !phone.trim() ||
-      !password ||
-      !firstName.trim() ||
-      !lastName.trim() ||
-      !inviteCode.trim()
-    ) {
-      setErrorMessage("All registration fields are required.");
-      return;
-    }
-
-    try {
-      setIsRegisterLoading(true);
-      setErrorMessage(null);
-
-      const registerResult = await onPhoneRegister?.({
-        phone,
-        password,
-        firstName,
-        lastName,
-        inviteCode,
-      });
-      const error = registerResult?.error ?? null;
-
-      if (error) {
-        const message =
-          typeof error?.message === "string" && error.message.length > 0
-            ? error.message
-            : "Registration failed. Try again.";
-        setErrorMessage(message);
-        return;
-      }
-
-      setInviteCode("");
-      setFirstName("");
-      setLastName("");
-      setPassword("");
-      setPhone("");
-      setAuthMode(MODE_LOGIN);
-      setErrorMessage("Registration submitted. Sign in with phone + password.");
-    } catch {
-      setErrorMessage("Registration failed. Try again.");
-    } finally {
-      setIsRegisterLoading(false);
-    }
-  };
-
   const handleGuestEntry = () => {
     if (isBusy) return;
     onContinueAsGuest?.();
@@ -131,6 +65,7 @@ export default function LoginScreen({
           <br />
           climb the leaderboard with your colleagues.
         </div>
+
         <button
           className="google-btn"
           onClick={handleGoogleLogin}
@@ -171,7 +106,6 @@ export default function LoginScreen({
           className="phone-entry-btn"
           onClick={() => {
             setErrorMessage(null);
-            setAuthMode(MODE_LOGIN);
             setIsPhoneAuthOpen(true);
           }}
           disabled={isBusy}
@@ -221,131 +155,51 @@ export default function LoginScreen({
                 ×
               </button>
 
-              {authMode === MODE_LOGIN && (
-                <>
-                  <div className="login-register-title">Sign in with phone</div>
-                  <div className="login-modal-subtitle">
-                    Enter your phone number and password to continue.
-                  </div>
-                  <div className="login-auth-card">
-                    <input
-                      className="login-auth-input"
-                      type="tel"
-                      autoComplete="tel"
-                      placeholder="Phone number (example: +14155552671)"
-                      value={phone}
-                      onChange={(event) => setPhone(event.target.value)}
-                      disabled={isBusy}
-                    />
-                    <input
-                      className="login-auth-input"
-                      type="password"
-                      autoComplete="current-password"
-                      placeholder="Password"
-                      value={password}
-                      onChange={(event) => setPassword(event.target.value)}
-                      disabled={isBusy}
-                    />
-                    <button
-                      className="phone-btn"
-                      onClick={() => {
-                        void handlePhoneSignIn();
-                      }}
-                      disabled={isBusy}
-                    >
-                      {isPhoneLoading ? "Signing in..." : "Sign in"}
-                    </button>
-                  </div>
+              <div className="login-register-title">Sign in with phone</div>
+              <div className="login-modal-subtitle">
+                Enter your phone number and password to continue.
+              </div>
+              <div className="login-auth-card">
+                <input
+                  className="login-auth-input"
+                  type="tel"
+                  autoComplete="tel"
+                  placeholder="Phone number (example: +14155552671)"
+                  value={phone}
+                  onChange={(event) => setPhone(event.target.value)}
+                  disabled={isBusy}
+                />
+                <input
+                  className="login-auth-input"
+                  type="password"
+                  autoComplete="current-password"
+                  placeholder="Password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  disabled={isBusy}
+                />
+                <button
+                  className="phone-btn"
+                  onClick={() => {
+                    void handlePhoneSignIn();
+                  }}
+                  disabled={isBusy}
+                >
+                  {isPhoneLoading ? "Signing in..." : "Sign in"}
+                </button>
+              </div>
 
-                  <button
-                    className="login-link-btn"
-                    onClick={() => {
-                      setErrorMessage(null);
-                      setAuthMode(MODE_REGISTER);
-                    }}
-                    disabled={isBusy}
-                  >
-                    Need access? Register with code
-                  </button>
-                </>
-              )}
-
-              {authMode === MODE_REGISTER && (
-                <>
-                  <div className="login-register-title">
-                    Register with phone
-                  </div>
-                  <div className="login-modal-subtitle">
-                    Use your shared code to request access.
-                  </div>
-                  <div className="login-auth-card">
-                    <input
-                      className="login-auth-input"
-                      type="tel"
-                      autoComplete="tel"
-                      placeholder="Phone number (example: +14155552671)"
-                      value={phone}
-                      onChange={(event) => setPhone(event.target.value)}
-                      disabled={isBusy}
-                    />
-                    <input
-                      className="login-auth-input"
-                      type="password"
-                      autoComplete="new-password"
-                      placeholder="Password"
-                      value={password}
-                      onChange={(event) => setPassword(event.target.value)}
-                      disabled={isBusy}
-                    />
-                    <input
-                      className="login-auth-input"
-                      type="text"
-                      autoComplete="given-name"
-                      placeholder="First name"
-                      value={firstName}
-                      onChange={(event) => setFirstName(event.target.value)}
-                      disabled={isBusy}
-                    />
-                    <input
-                      className="login-auth-input"
-                      type="text"
-                      autoComplete="family-name"
-                      placeholder="Last name"
-                      value={lastName}
-                      onChange={(event) => setLastName(event.target.value)}
-                      disabled={isBusy}
-                    />
-                    <input
-                      className="login-auth-input"
-                      type="text"
-                      placeholder="Shared invite code"
-                      value={inviteCode}
-                      onChange={(event) => setInviteCode(event.target.value)}
-                      disabled={isBusy}
-                    />
-                    <button
-                      className="phone-btn"
-                      onClick={() => {
-                        void handleRegister();
-                      }}
-                      disabled={isBusy}
-                    >
-                      {isRegisterLoading ? "Registering..." : "Register"}
-                    </button>
-                  </div>
-
-                  <button
-                    className="login-link-btn"
-                    onClick={() => {
-                      setErrorMessage(null);
-                      setAuthMode(MODE_LOGIN);
-                    }}
-                    disabled={isBusy}
-                  >
-                    Back to sign in
-                  </button>
-                </>
-              )}
+              <button
+                className="login-link-btn"
+                onClick={() => {
+                  setErrorMessage(null);
+                  setIsPhoneAuthOpen(false);
+                  onOpenRegister?.();
+                }}
+                disabled={isBusy}
+              >
+                Need access? Register with code
+              </button>
 
               {errorMessage && (
                 <div className="login-error-msg">{errorMessage}</div>

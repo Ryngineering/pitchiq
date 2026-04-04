@@ -4,6 +4,7 @@ import { calcPts } from "./data";
 import Toast from "./components/Toast";
 import HomeScreen from "./components/HomeScreen";
 import LoginScreen from "./components/LoginScreen";
+import RegisterScreen from "./components/RegisterScreen";
 import LeaderboardScreen from "./components/LeaderboardScreen";
 import ProfileScreen from "./components/ProfileScreen";
 import MatchDetail from "./components/MatchDetail";
@@ -366,7 +367,7 @@ function App() {
   const [screen, setScreen] = useState("home");
   const [selectedId, setSelectedId] = useState(null);
   const [toast, setToast] = useState(null);
-  const [registerMode, setRegisterMode] = useState(false);
+  const [authScreen, setAuthScreen] = useState("login");
   const [isRefreshingApproval, setIsRefreshingApproval] = useState(false);
   const [isOffline, setIsOffline] = useState(
     typeof navigator !== "undefined" ? !navigator.onLine : false,
@@ -397,9 +398,7 @@ function App() {
       .toLowerCase()
       .includes("register");
 
-    if (registerPath || registerParam === "1") {
-      setRegisterMode(true);
-    }
+    setAuthScreen(registerPath || registerParam === "1" ? "register" : "login");
   }, []);
 
   useEffect(() => {
@@ -697,7 +696,7 @@ function App() {
       });
 
       if (!response.error) {
-        setRegisterMode(false);
+        setAuthScreen("login");
         const nextUrl = `${window.location.pathname}`;
         window.history.replaceState({}, document.title, nextUrl);
         showToast(
@@ -776,13 +775,27 @@ function App() {
             Offline mode: sign-in requires internet.
           </div>
         )}
-        <LoginScreen
-          onLogin={login}
-          onContinueAsGuest={continueAsGuest}
-          onPhoneSignIn={handlePhoneSignIn}
-          onPhoneRegister={handlePhoneRegister}
-          registerMode={registerMode}
-        />
+        {authScreen === "register" ? (
+          <RegisterScreen
+            onRegister={handlePhoneRegister}
+            onGoToSignIn={() => {
+              setAuthScreen("login");
+              const nextUrl = `${window.location.pathname}`;
+              window.history.replaceState({}, document.title, nextUrl);
+            }}
+          />
+        ) : (
+          <LoginScreen
+            onLogin={login}
+            onContinueAsGuest={continueAsGuest}
+            onPhoneSignIn={handlePhoneSignIn}
+            onOpenRegister={() => {
+              setAuthScreen("register");
+              const nextUrl = `${window.location.pathname}?register=1`;
+              window.history.replaceState({}, document.title, nextUrl);
+            }}
+          />
+        )}
       </>
     );
   }
