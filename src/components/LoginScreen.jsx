@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const MODE_LOGIN = "login";
 const MODE_REGISTER = "register";
@@ -13,6 +13,7 @@ export default function LoginScreen({
   const [isLoading, setIsLoading] = useState(false);
   const [isPhoneLoading, setIsPhoneLoading] = useState(false);
   const [isRegisterLoading, setIsRegisterLoading] = useState(false);
+  const [isPhoneAuthOpen, setIsPhoneAuthOpen] = useState(registerMode);
   const [authMode, setAuthMode] = useState(
     registerMode ? MODE_REGISTER : MODE_LOGIN,
   );
@@ -24,6 +25,13 @@ export default function LoginScreen({
   const [errorMessage, setErrorMessage] = useState(null);
 
   const isBusy = isLoading || isPhoneLoading || isRegisterLoading;
+
+  useEffect(() => {
+    if (registerMode) {
+      setIsPhoneAuthOpen(true);
+      setAuthMode(MODE_REGISTER);
+    }
+  }, [registerMode]);
 
   const handleGoogleLogin = async () => {
     try {
@@ -90,6 +98,7 @@ export default function LoginScreen({
       setFirstName("");
       setLastName("");
       setPassword("");
+      setPhone("");
       setAuthMode(MODE_LOGIN);
       setErrorMessage("Registration submitted. Sign in with phone + password.");
     } catch {
@@ -122,158 +131,53 @@ export default function LoginScreen({
           <br />
           climb the leaderboard with your colleagues.
         </div>
-
-        {authMode === MODE_LOGIN && (
-          <>
-            <button
-              className="google-btn"
-              onClick={handleGoogleLogin}
-              disabled={isBusy}
-            >
-              {!isLoading ? (
-                <>
-                  <svg
-                    className="google-icon"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                      fill="#4285F4"
-                    />
-                    <path
-                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                      fill="#34A853"
-                    />
-                    <path
-                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"
-                      fill="#FBBC05"
-                    />
-                    <path
-                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                      fill="#EA4335"
-                    />
-                  </svg>
-                  Continue with Google
-                </>
-              ) : (
-                <span>Redirecting to Google...</span>
-              )}
-            </button>
-
-            <div className="login-auth-card">
-              <input
-                className="login-auth-input"
-                type="tel"
-                autoComplete="tel"
-                placeholder="Phone number (example: +14155552671)"
-                value={phone}
-                onChange={(event) => setPhone(event.target.value)}
-                disabled={isBusy}
-              />
-              <input
-                className="login-auth-input"
-                type="password"
-                autoComplete="current-password"
-                placeholder="Password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                disabled={isBusy}
-              />
-              <button
-                className="phone-btn"
-                onClick={() => {
-                  void handlePhoneSignIn();
-                }}
-                disabled={isBusy}
+        <button
+          className="google-btn"
+          onClick={handleGoogleLogin}
+          disabled={isBusy}
+        >
+          {!isLoading ? (
+            <>
+              <svg
+                className="google-icon"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
               >
-                {isPhoneLoading ? "Signing in..." : "Sign in with phone"}
-              </button>
-            </div>
+                <path
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  fill="#4285F4"
+                />
+                <path
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  fill="#34A853"
+                />
+                <path
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"
+                  fill="#FBBC05"
+                />
+                <path
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                  fill="#EA4335"
+                />
+              </svg>
+              Continue with Google
+            </>
+          ) : (
+            <span>Redirecting to Google...</span>
+          )}
+        </button>
 
-            <button
-              className="login-link-btn"
-              onClick={() => {
-                setErrorMessage(null);
-                setAuthMode(MODE_REGISTER);
-              }}
-              disabled={isBusy}
-            >
-              Need access? Register with code
-            </button>
-          </>
-        )}
-
-        {authMode === MODE_REGISTER && (
-          <div className="login-auth-card">
-            <div className="login-register-title">Register with phone</div>
-            <input
-              className="login-auth-input"
-              type="tel"
-              autoComplete="tel"
-              placeholder="Phone number (example: +14155552671)"
-              value={phone}
-              onChange={(event) => setPhone(event.target.value)}
-              disabled={isBusy}
-            />
-            <input
-              className="login-auth-input"
-              type="password"
-              autoComplete="new-password"
-              placeholder="Password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              disabled={isBusy}
-            />
-            <input
-              className="login-auth-input"
-              type="text"
-              autoComplete="given-name"
-              placeholder="First name"
-              value={firstName}
-              onChange={(event) => setFirstName(event.target.value)}
-              disabled={isBusy}
-            />
-            <input
-              className="login-auth-input"
-              type="text"
-              autoComplete="family-name"
-              placeholder="Last name"
-              value={lastName}
-              onChange={(event) => setLastName(event.target.value)}
-              disabled={isBusy}
-            />
-            <input
-              className="login-auth-input"
-              type="text"
-              placeholder="Shared invite code"
-              value={inviteCode}
-              onChange={(event) => setInviteCode(event.target.value)}
-              disabled={isBusy}
-            />
-            <button
-              className="phone-btn"
-              onClick={() => {
-                void handleRegister();
-              }}
-              disabled={isBusy}
-            >
-              {isRegisterLoading ? "Registering..." : "Register"}
-            </button>
-            <button
-              className="login-link-btn"
-              onClick={() => {
-                setErrorMessage(null);
-                setAuthMode(MODE_LOGIN);
-              }}
-              disabled={isBusy}
-            >
-              Back to sign in
-            </button>
-          </div>
-        )}
-
-        {errorMessage && <div className="login-error-msg">{errorMessage}</div>}
+        <button
+          className="phone-entry-btn"
+          onClick={() => {
+            setErrorMessage(null);
+            setAuthMode(MODE_LOGIN);
+            setIsPhoneAuthOpen(true);
+          }}
+          disabled={isBusy}
+        >
+          Login with phone number
+        </button>
 
         <button
           className="guest-btn"
@@ -288,6 +192,167 @@ export default function LoginScreen({
           <br />
           SSO secured via Supabase Auth.
         </div>
+
+        {isPhoneAuthOpen && (
+          <div
+            className="login-modal-overlay"
+            onClick={() => {
+              if (!isBusy) {
+                setIsPhoneAuthOpen(false);
+                setErrorMessage(null);
+              }
+            }}
+          >
+            <div
+              className="login-modal-card"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <button
+                className="login-modal-close"
+                onClick={() => {
+                  if (!isBusy) {
+                    setIsPhoneAuthOpen(false);
+                    setErrorMessage(null);
+                  }
+                }}
+                disabled={isBusy}
+                aria-label="Close"
+              >
+                ×
+              </button>
+
+              {authMode === MODE_LOGIN && (
+                <>
+                  <div className="login-register-title">Sign in with phone</div>
+                  <div className="login-modal-subtitle">
+                    Enter your phone number and password to continue.
+                  </div>
+                  <div className="login-auth-card">
+                    <input
+                      className="login-auth-input"
+                      type="tel"
+                      autoComplete="tel"
+                      placeholder="Phone number (example: +14155552671)"
+                      value={phone}
+                      onChange={(event) => setPhone(event.target.value)}
+                      disabled={isBusy}
+                    />
+                    <input
+                      className="login-auth-input"
+                      type="password"
+                      autoComplete="current-password"
+                      placeholder="Password"
+                      value={password}
+                      onChange={(event) => setPassword(event.target.value)}
+                      disabled={isBusy}
+                    />
+                    <button
+                      className="phone-btn"
+                      onClick={() => {
+                        void handlePhoneSignIn();
+                      }}
+                      disabled={isBusy}
+                    >
+                      {isPhoneLoading ? "Signing in..." : "Sign in"}
+                    </button>
+                  </div>
+
+                  <button
+                    className="login-link-btn"
+                    onClick={() => {
+                      setErrorMessage(null);
+                      setAuthMode(MODE_REGISTER);
+                    }}
+                    disabled={isBusy}
+                  >
+                    Need access? Register with code
+                  </button>
+                </>
+              )}
+
+              {authMode === MODE_REGISTER && (
+                <>
+                  <div className="login-register-title">
+                    Register with phone
+                  </div>
+                  <div className="login-modal-subtitle">
+                    Use your shared code to request access.
+                  </div>
+                  <div className="login-auth-card">
+                    <input
+                      className="login-auth-input"
+                      type="tel"
+                      autoComplete="tel"
+                      placeholder="Phone number (example: +14155552671)"
+                      value={phone}
+                      onChange={(event) => setPhone(event.target.value)}
+                      disabled={isBusy}
+                    />
+                    <input
+                      className="login-auth-input"
+                      type="password"
+                      autoComplete="new-password"
+                      placeholder="Password"
+                      value={password}
+                      onChange={(event) => setPassword(event.target.value)}
+                      disabled={isBusy}
+                    />
+                    <input
+                      className="login-auth-input"
+                      type="text"
+                      autoComplete="given-name"
+                      placeholder="First name"
+                      value={firstName}
+                      onChange={(event) => setFirstName(event.target.value)}
+                      disabled={isBusy}
+                    />
+                    <input
+                      className="login-auth-input"
+                      type="text"
+                      autoComplete="family-name"
+                      placeholder="Last name"
+                      value={lastName}
+                      onChange={(event) => setLastName(event.target.value)}
+                      disabled={isBusy}
+                    />
+                    <input
+                      className="login-auth-input"
+                      type="text"
+                      placeholder="Shared invite code"
+                      value={inviteCode}
+                      onChange={(event) => setInviteCode(event.target.value)}
+                      disabled={isBusy}
+                    />
+                    <button
+                      className="phone-btn"
+                      onClick={() => {
+                        void handleRegister();
+                      }}
+                      disabled={isBusy}
+                    >
+                      {isRegisterLoading ? "Registering..." : "Register"}
+                    </button>
+                  </div>
+
+                  <button
+                    className="login-link-btn"
+                    onClick={() => {
+                      setErrorMessage(null);
+                      setAuthMode(MODE_LOGIN);
+                    }}
+                    disabled={isBusy}
+                  >
+                    Back to sign in
+                  </button>
+                </>
+              )}
+
+              {errorMessage && (
+                <div className="login-error-msg">{errorMessage}</div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

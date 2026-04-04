@@ -461,10 +461,34 @@ body { font-family: 'Nunito', sans-serif; color: var(--text); }
 .guest-btn:active { transform: scale(0.98); }
 .guest-btn:disabled { opacity: 0.6; cursor: wait; transform: none; }
 
-.login-auth-card {
+.phone-entry-btn {
   width: 100%;
   max-width: 300px;
-  margin-top: 12px;
+  margin-top: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: #e8edf7;
+  border-radius: 14px;
+  padding: 14px 20px;
+  font-size: 14px;
+  font-weight: 800;
+  font-family: 'Nunito', sans-serif;
+  cursor: pointer;
+  transition: transform 0.15s, background 0.15s, box-shadow 0.15s;
+}
+
+.phone-entry-btn:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 26px rgba(0,0,0,0.25);
+}
+.phone-entry-btn:active { transform: scale(0.98); }
+.phone-entry-btn:disabled { opacity: 0.6; cursor: wait; transform: none; }
+
+.login-auth-card {
+  width: 100%;
+  max-width: 100%;
+  margin-top: 10px;
   display: grid;
   gap: 10px;
 }
@@ -493,15 +517,16 @@ body { font-family: 'Nunito', sans-serif; color: var(--text); }
 
 .phone-btn {
   width: 100%;
-  border: 1px solid rgba(255, 183, 0, 0.35);
-  background: rgba(255, 183, 0, 0.1);
-  color: #ffe4a7;
+  border: none;
+  background: #ffffff;
+  color: #1a1a1a;
   border-radius: 12px;
-  padding: 12px;
+  padding: 13px;
   font-size: 14px;
   font-weight: 900;
   font-family: 'Nunito', sans-serif;
   cursor: pointer;
+  box-shadow: 0 10px 28px rgba(0,0,0,0.32);
 }
 
 .phone-btn:disabled {
@@ -509,13 +534,17 @@ body { font-family: 'Nunito', sans-serif; color: var(--text); }
   cursor: wait;
 }
 
+.phone-btn:hover {
+  transform: translateY(-1px);
+}
+
 .login-link-btn {
   margin-top: 8px;
   border: none;
   background: transparent;
-  color: #9fc7ff;
+  color: #9cc4ff;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 900;
   cursor: pointer;
 }
 
@@ -526,7 +555,7 @@ body { font-family: 'Nunito', sans-serif; color: var(--text); }
 
 .login-error-msg {
   width: 100%;
-  max-width: 300px;
+  max-width: 100%;
   margin-top: 8px;
   border-radius: 10px;
   border: 1px solid rgba(255, 71, 87, 0.2);
@@ -536,6 +565,69 @@ body { font-family: 'Nunito', sans-serif; color: var(--text); }
   font-weight: 700;
   padding: 10px 12px;
   text-align: center;
+}
+
+.login-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(5, 8, 20, 0.72);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+.login-modal-card {
+  width: 100%;
+  max-width: 360px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: linear-gradient(180deg, rgba(20, 26, 52, 0.96), rgba(10, 16, 34, 0.96));
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.48);
+  padding: 20px 16px 16px;
+  position: relative;
+  animation: loginModalIn 0.2s ease-out;
+}
+
+@keyframes loginModalIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.login-modal-close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.09);
+  color: var(--sub);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.login-modal-close:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.login-modal-subtitle {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+  font-weight: 700;
+  margin-top: 4px;
 }
 
 .login-terms { font-size: 11px; color: var(--muted); text-align: center; margin-top: 20px; font-weight: 600; max-width: 240px; line-height: 1.6; }
